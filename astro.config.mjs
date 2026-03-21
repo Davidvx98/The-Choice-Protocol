@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import compressor from 'astro-compressor';
 
 export default defineConfig({
-  site: 'https://the-choice-protocol.com',
+  site: process.env.SITE_URL || 'https://vps22682.cubepath.net',
   compressHTML: true,
   integrations: [
     sitemap({
