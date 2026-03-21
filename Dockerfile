@@ -31,9 +31,9 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
-# Coolify/Traefik uses this to know the container is healthy and ready
+# Use ${PORT} so it works regardless of what Coolify injects
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:3000/ > /dev/null || exit 1
+  CMD wget -qO- http://localhost:${PORT:-3000}/ > /dev/null || exit 1
 
 USER appuser
 
