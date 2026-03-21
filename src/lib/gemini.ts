@@ -102,7 +102,8 @@ export async function translateWithGemini(text: string, targetLang: string): Pro
   };
 
   const langName = langMap[targetLang] || targetLang;
-  const prompt = `Traduce el siguiente texto a ${langName}. Responde SOLO con la traducción, sin explicaciones:\n\n${text}`;
+  // Delimit user text to prevent prompt injection
+  const prompt = `Traduce el siguiente texto a ${langName}. Responde SOLO con la traducción, sin explicaciones.\n\n---BEGIN TEXT---\n${text.slice(0, 5000)}\n---END TEXT---`;
 
   return askGeminiSafe(prompt);
 }

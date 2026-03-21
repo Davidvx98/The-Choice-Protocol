@@ -19,6 +19,15 @@ function clampStr(val: unknown, max: number): string {
   return typeof val === 'string' ? val.slice(0, max) : '';
 }
 
+function isValidImageUrl(url: unknown): boolean {
+  if (typeof url !== 'string' || !url) return false;
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:') &&
+      ['cdn.myanimelist.net', 'image.tmdb.org', 'i.ytimg.com'].some(h => u.hostname === h || u.hostname.endsWith('.' + h));
+  } catch { return false; }
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
@@ -96,7 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
             title: clampStr(item.title, 200),
             description: clampStr(item.description, 1000),
             justification: clampStr(item.justification, 1000),
-            image: match?.image || '',
+            image: isValidImageUrl(match?.image) ? match.image : '',
             score: match?.score,
             year: match?.year,
             episodes: match?.episodes,

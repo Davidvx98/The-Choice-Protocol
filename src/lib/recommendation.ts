@@ -109,6 +109,25 @@ export function mapAnswersToTags(type: 'anime' | 'movie', answers: UserAnswers):
   };
 }
 
+/** Sanitise a single answer value: keep only safe characters, cap length */
+function sanitizeAnswer(val: unknown, maxLen = 80): string {
+  if (typeof val !== 'string') return '';
+  return val.replace(/[\n\r\t`{}\[\]\\]/g, '').trim().slice(0, maxLen);
+}
+
+/** Sanitise all answer fields to prevent prompt injection */
+function sanitizeAnswers(raw: UserAnswers): UserAnswers {
+  const out: UserAnswers = {};
+  const keys: (keyof UserAnswers)[] = [
+    'mood', 'genres', 'duration', 'intensity', 'extras',
+    'protagonist', 'setting', 'vibe', 'experience', 'story', 'era',
+  ];
+  for (const k of keys) {
+    if (raw[k]) out[k] = sanitizeAnswer(raw[k]);
+  }
+  return out;
+}
+
 /**
  * Genera un prompt optimizado para Gemini basado en las respuestas
  */
@@ -118,22 +137,23 @@ export function buildGeminiPrompt(
   userName: string,
   apiResults: any[]
 ): string {
+  const safe = sanitizeAnswers(answers);
   const category = type === 'anime' ? 'anime' : 'película';
   const titles = apiResults.map(r => `"${r.title}" (${r.score}/10, ${r.year})`).join(', ');
 
   // Collect all non-empty answers into readable lines
   const prefLines: string[] = [];
-  if (answers.mood)         prefLines.push(`- Estado de ánimo: ${answers.mood}`);
-  if (answers.genres)       prefLines.push(`- Géneros favoritos: ${answers.genres}`);
-  if (answers.duration)     prefLines.push(`- Duración preferida: ${answers.duration}`);
-  if (answers.intensity)    prefLines.push(`- Intensidad: ${answers.intensity}`);
-  if (answers.protagonist)  prefLines.push(`- Protagonista ideal: ${answers.protagonist}`);
-  if (answers.setting)      prefLines.push(`- Ambientación: ${answers.setting}`);
-  if (answers.vibe)         prefLines.push(`- Vibra / estilo: ${answers.vibe}`);
-  if (answers.experience)   prefLines.push(`- Experiencia buscada: ${answers.experience}`);
-  if (answers.story)        prefLines.push(`- Tipo de historia: ${answers.story}`);
-  if (answers.era)          prefLines.push(`- Época preferida: ${answers.era}`);
-  if (answers.extras)       prefLines.push(`- Extras / prioridades: ${answers.extras}`);
+  if (safe.mood)         prefLines.push(`- Estado de ánimo: ${safe.mood}`);
+  if (safe.genres)       prefLines.push(`- Géneros favoritos: ${safe.genres}`);
+  if (safe.duration)     prefLines.push(`- Duración preferida: ${safe.duration}`);
+  if (safe.intensity)    prefLines.push(`- Intensidad: ${safe.intensity}`);
+  if (safe.protagonist)  prefLines.push(`- Protagonista ideal: ${safe.protagonist}`);
+  if (safe.setting)      prefLines.push(`- Ambientación: ${safe.setting}`);
+  if (safe.vibe)         prefLines.push(`- Vibra / estilo: ${safe.vibe}`);
+  if (safe.experience)   prefLines.push(`- Experiencia buscada: ${safe.experience}`);
+  if (safe.story)        prefLines.push(`- Tipo de historia: ${safe.story}`);
+  if (safe.era)          prefLines.push(`- Época preferida: ${safe.era}`);
+  if (safe.extras)       prefLines.push(`- Extras / prioridades: ${safe.extras}`);
 
   const prefsBlock = prefLines.length
     ? prefLines.join('\n')

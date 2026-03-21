@@ -58,7 +58,14 @@ export async function searchAnime(params: {
     query.set('genres', genres.join(','));
   }
 
-  const res = await fetch(`${JIKAN_BASE}/anime?${query}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(`${JIKAN_BASE}/anime?${query}`, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) throw new Error(`Jikan API error: ${res.status}`);
   
   const data = await res.json();
@@ -117,7 +124,14 @@ export async function searchMovies(params: {
     query.set('primary_release_date.lte', `${yearRange[1]}-12-31`);
   }
 
-  const res = await fetch(`${TMDB_BASE}/discover/movie?${query}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(`${TMDB_BASE}/discover/movie?${query}`, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) throw new Error(`TMDB API error: ${res.status}`);
 
   const data = await res.json();

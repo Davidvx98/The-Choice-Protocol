@@ -2,9 +2,9 @@
 /** Pills - Escena Matrix con elección roja/azul */
 ---
 
-<div id="pills-scene" class="scene scene-hidden" style="overflow-y:auto;">
+<div id="pills-scene" class="scene scene-hidden" style="overflow-y:auto;" role="region" aria-label="Elección de camino">
   <!-- Matrix rain canvas — behind everything -->
-  <canvas id="matrix-canvas" class="absolute inset-0 pointer-events-none" style="z-index:0;opacity:0;width:100%;height:100%;"></canvas>
+  <canvas id="matrix-canvas" class="absolute inset-0 pointer-events-none" aria-hidden="true" style="z-index:0;opacity:0;width:100%;height:100%;"></canvas>
   <div class="relative z-10 flex flex-col items-center gap-12 px-4 py-8">
     <!-- Greeting -->
     <div class="text-center space-y-3">

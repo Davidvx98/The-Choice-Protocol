@@ -4,7 +4,7 @@
  */
 ---
 
-<div id="result-scene" class="scene scene-hidden" style="overflow-y:auto;align-items:flex-start;">
+<div id="result-scene" class="scene scene-hidden" role="region" aria-label="Resultados y recomendaciones" style="overflow-y:auto;align-items:flex-start;">
   <div class="max-w-4xl w-full mx-auto px-4 py-10">
 
     <!-- Loading -->
@@ -390,8 +390,12 @@
     }
 
     // ── History helpers ────────────────────────────────────────────────────────────
+    function safeParseJSON<T>(raw: string | null, fallback: T): T {
+      try { return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
+    }
+
     function saveToHistory(recs: any[], name: string, type: string) {
-      const hist: any[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      const hist: any[] = safeParseJSON(localStorage.getItem(HISTORY_KEY), []);
       hist.unshift({
         date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
         name, type, recommendations: recs,
@@ -401,7 +405,7 @@
 
     function renderHistoryPanel() {
       if (!historyList || !historyEmpty) return;
-      const hist: any[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      const hist: any[] = safeParseJSON(localStorage.getItem(HISTORY_KEY), []);
       historyList.innerHTML = '';
       if (!hist.length) { historyEmpty.classList.remove('hidden'); return; }
       historyEmpty.classList.add('hidden');
@@ -475,7 +479,7 @@
     // ── Fetch ──────────────────────────────────────────────────────────────────────
     async function fetchRecommendation() {
       const choice  = localStorage.getItem('pillChoice') || 'anime';
-      const answers = JSON.parse(localStorage.getItem('userAnswers') || '{}');
+      const answers = safeParseJSON(localStorage.getItem('userAnswers'), {});
       const name    = localStorage.getItem('userName') || 'Traveler';
       const str     = s();
 

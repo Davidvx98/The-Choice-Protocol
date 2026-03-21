@@ -12,7 +12,34 @@ import Result from '../components/Result.astro';
 ---
 
 <Layout>
-  <main class="relative w-full h-screen overflow-hidden">
+  <main class="relative w-full h-screen overflow-hidden" role="main">
+    <!-- SEO: Contenido visible para crawlers que no ejecutan JS -->
+    <header class="sr-only">
+      <h1>Las Píldoras — Recomendador de Anime y Películas con Inteligencia Artificial</h1>
+      <p>Descubre qué anime o película ver hoy. Elige tu camino, responde preguntas sobre tu estado de ánimo y preferencias, y recibe 3 recomendaciones personalizadas generadas por IA.</p>
+    </header>
+
+    <!-- SEO: Contenido indexable oculto visualmente pero accesible para bots -->
+    <article class="sr-only" aria-hidden="true">
+      <h2>¿Qué anime ver hoy? Recomendaciones personalizadas con IA</h2>
+      <p>Las Píldoras es un recomendador interactivo que usa Google Gemini para sugerirte anime y películas según tu estado de ánimo. Funciona como una experiencia narrativa: abres un sobre misterioso, eliges entre la Píldora Roja (anime) o la Píldora Azul (películas), respondes preguntas sobre tus gustos y recibes 3 recomendaciones perfectas.</p>
+      <h3>Tipos de recomendaciones</h3>
+      <ul>
+        <li>Recomendaciones de anime: acción, romance, misterio, comedia, ciencia ficción, fantasía, terror, deportes</li>
+        <li>Recomendaciones de películas: acción, drama, terror, comedia, ciencia ficción, thriller, animación, documentales</li>
+      </ul>
+      <h3>¿Cómo funciona el recomendador?</h3>
+      <ol>
+        <li>Abre el sobre misterioso y descubre el mensaje</li>
+        <li>Elige tu camino: Píldora Roja (anime) o Píldora Azul (películas)</li>
+        <li>Responde preguntas sobre tu estado de ánimo, géneros favoritos y preferencias</li>
+        <li>Recibe 3 recomendaciones personalizadas generadas por inteligencia artificial</li>
+      </ol>
+      <h3>Géneros disponibles</h3>
+      <p>Anime: Shonen, Seinen, Shojo, Slice of Life, Mecha, Isekai, Romance, Acción, Aventura, Misterio, Psicológico, Terror, Comedia, Deportes, Fantasía, Ciencia Ficción.</p>
+      <p>Películas: Acción, Aventura, Drama, Romance, Terror, Suspense, Comedia, Ciencia Ficción, Thriller, Crimen, Animación, Documental.</p>
+    </article>
+
     <!-- Todas las escenas se apilan en posición absoluta -->
     <Envelope />
     <Letter />
@@ -421,7 +448,8 @@ import Result from '../components/Result.astro';
       switchTrack(SCENE_TRACKS.questions.videoId);
     } else if (to === 'result') {
       if (localStorage.getItem('pillChoice') === 'anime') {
-        const answers: Record<string, string> = JSON.parse(localStorage.getItem('userAnswers') || '{}');
+        let answers: Record<string, string> = {};
+        try { answers = JSON.parse(localStorage.getItem('userAnswers') || '{}'); } catch {}
         const mood   = answers['mood']   ?? '';
         const genres = answers['genres'] ?? '';
         if (mood === 'melancholic') {

@@ -55,6 +55,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy':          'strict-origin-when-cross-origin',
   'Permissions-Policy':       'camera=(), microphone=(), geolocation=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.myanimelist.net https://image.tmdb.org https://i.ytimg.com; font-src 'self'; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
 };
 
 export const onRequest = defineMiddleware(async ({ request, url }, next) => {
@@ -79,6 +80,11 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   const newHeaders = new Headers(response.headers);
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     newHeaders.set(key, value);
+  }
+
+  // Cache static assets for performance (SEO: improves Core Web Vitals)
+  if (url.pathname.match(/\.(css|js|svg|png|jpg|webp|woff2?)$/)) {
+    newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
   }
 
   return new Response(response.body, {

@@ -1,20 +1,144 @@
 ---
 import '../styles/global.css';
+
 interface Props {
   title?: string;
+  description?: string;
+  ogImage?: string;
+  canonicalPath?: string;
 }
-const { title = 'Las Píldoras — ¿Qué deberías ver hoy?' } = Astro.props;
+
+const SITE_URL = import.meta.env.SITE ?? 'https://the-choice-protocol.com';
+
+const {
+  title = 'Las Píldoras — Recomendador de Anime y Películas con IA | ¿Qué ver hoy?',
+  description = 'Descubre qué anime o película ver hoy con inteligencia artificial. Recomendaciones personalizadas de anime, películas y series basadas en tu estado de ánimo y preferencias.',
+  ogImage = `${SITE_URL}/media/og-cover.png`,
+  canonicalPath = '',
+} = Astro.props;
+
+const canonicalURL = new URL(canonicalPath, SITE_URL).href;
 ---
 <!doctype html>
-<html lang="es" style="background:#000;">
+<html lang="es" dir="ltr" style="background:#000;">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Descubre qué anime o película ver hoy con una experiencia interactiva única." />
+
+    <!-- SEO básico -->
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content="recomendaciones anime, qué anime ver, películas recomendadas, qué ver hoy, recomendador con IA, anime online, mejores animes, películas para ver, series recomendadas, anime recommendations, what to watch today" />
+    <meta name="author" content="The Choice Protocol" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0a0a0f" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Hreflang: SEO internacional -->
+    <link rel="alternate" hreflang="es" href={`${SITE_URL}/`} />
+    <link rel="alternate" hreflang="en" href={`${SITE_URL}/`} />
+    <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/`} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Las Píldoras — The Choice Protocol" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Preconnect para rendimiento -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.youtube.com" />
+    <link rel="dns-prefetch" href="https://api.jikan.moe" />
+    <link rel="dns-prefetch" href="https://image.tmdb.org" />
+
+    <!-- Schema.org JSON-LD: WebApplication -->
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Las Píldoras — The Choice Protocol",
+      "url": SITE_URL,
+      "description": description,
+      "applicationCategory": "EntertainmentApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Davidvx98",
+        "url": "https://github.com/Davidvx98"
+      },
+      "inLanguage": ["es", "en"],
+      "keywords": "anime, películas, recomendaciones, IA, inteligencia artificial, qué ver hoy"
+    })} />
+
+    <!-- Schema.org JSON-LD: FAQ -->
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Cómo funciona el recomendador de anime y películas?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Las Píldoras utiliza inteligencia artificial (Google Gemini) para analizar tu estado de ánimo, géneros favoritos y preferencias, y generar 3 recomendaciones personalizadas de anime o películas."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué anime debería ver hoy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Depende de tu estado de ánimo y gustos. Usa nuestro recomendador interactivo: elige la Píldora Roja (anime) o Azul (películas), responde unas preguntas y la IA te dará 3 recomendaciones perfectas para ti."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Es gratis el recomendador?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí, Las Píldoras es completamente gratuito. Solo necesitas abrir la web, elegir tu camino y responder las preguntas para obtener recomendaciones personalizadas."
+          }
+        }
+      ]
+    })} />
   </head>
   <body class="min-h-screen relative bg-black">
+    <noscript>
+      <div style="background:#0a0a0f;color:#e5e5e5;font-family:sans-serif;padding:2rem;max-width:800px;margin:0 auto;">
+        <h1 style="color:#b026ff;font-size:1.5rem;margin-bottom:1rem;">Las Píldoras — Recomendador de Anime y Películas con IA</h1>
+        <p style="margin-bottom:1rem;">Esta aplicación necesita JavaScript para funcionar. Activa JavaScript en tu navegador para disfrutar de la experiencia interactiva completa.</p>
+        <h2 style="color:#00d4ff;font-size:1.2rem;margin-bottom:0.5rem;">¿Qué puedes hacer aquí?</h2>
+        <ul style="line-height:1.8;">
+          <li>Obtener recomendaciones personalizadas de <strong>anime</strong> basadas en tu estado de ánimo</li>
+          <li>Descubrir <strong>películas</strong> perfectas para ti usando inteligencia artificial</li>
+          <li>Explorar géneros: acción, romance, misterio, comedia, ciencia ficción, fantasía, terror y más</li>
+          <li>Experiencia disponible en <strong>español e inglés</strong></li>
+        </ul>
+      </div>
+    </noscript>
     <slot />
   </body>
 </html>
