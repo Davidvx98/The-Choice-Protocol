@@ -211,6 +211,12 @@
       }
     }
 
+    // Stop audio on any scene transition away from intro
+    window.addEventListener('scene:advance', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.from === 'intro') stopLetterAudio();
+    });
+
     // ── Float del sobre ──────────────────────────────────────────────────
     const floatAnim = gsap.to('#envelope-wrapper', {
       y: -10,

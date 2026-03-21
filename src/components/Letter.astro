@@ -117,6 +117,12 @@
       }
     }
 
+    // Stop audio on any scene transition away from message
+    window.addEventListener('scene:advance', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.from === 'message') stopIntroAudio();
+    });
+
     window.addEventListener('scene:advance', async (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail.to !== 'message') return;

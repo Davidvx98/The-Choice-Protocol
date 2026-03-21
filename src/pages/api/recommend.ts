@@ -74,13 +74,16 @@ export const POST: APIRoute = async ({ request }) => {
           limit: 10,
         });
       }
+      console.log(`[API] ${type} search returned ${apiResults.length} results`);
     } catch (apiErr) {
-      console.error('[API] External API error:', apiErr);
+      console.error('[API] External API error:', (apiErr as Error).message);
     }
 
     // 3. Intentar Gemini para personalización
     const prompt = buildGeminiPrompt(type, answers, safeName, apiResults);
+    console.log('[Gemini] Sending prompt, apiResults count:', apiResults.length);
     const geminiResponse = await askGeminiSafe(prompt);
+    console.log('[Gemini] Response received:', geminiResponse ? `${geminiResponse.length} chars` : 'null (fallback)');
 
     let result: any;
 
@@ -149,13 +152,19 @@ function buildFallbackResult(apiResults: any[], tags: any, userName: string) {
     };
   }
 
+  const genreText = tags.genreNames?.length
+    ? tags.genreNames.join(', ')
+    : 'tus géneros favoritos';
+
   return {
-    recommendations: apiResults.slice(0, 3).map((r, i) => ({
+    recommendations: apiResults.slice(0, 3).map((r: any, i: number) => ({
       title: r.title,
       description: r.description,
       justification: i === 0
-        ? `Basándonos en tus preferencias, ${userName}, creemos que "${r.title}" es perfecta para ti. Tiene una puntuación de ${r.score}.`
-        : `"${r.title}" también podría gustarte dado tu perfil.`,
+        ? `${userName}, "${r.title}" encaja perfectamente con lo que buscas. Con una puntuación de ${r.score}/10 y siendo del género ${genreText}, es nuestra mejor elección para ti.`
+        : i === 1
+        ? `"${r.title}" es otra gran opción con ${r.score}/10 de puntuación. Su estilo complementa tus preferencias de ${genreText}.`
+        : `"${r.title}" completa nuestras recomendaciones — una joya con ${r.score}/10 que no deberías perderte.`,
       image: r.image,
       score: r.score,
       year: r.year,

@@ -101,7 +101,7 @@ export async function searchMovies(params: {
   yearRange?: [number, number];
   limit?: number;
 }): Promise<MovieResult[]> {
-  const TMDB_KEY = import.meta.env.TMDB_API_KEY || '';
+  const TMDB_KEY = (import.meta.env.TMDB_API_KEY || '').trim();
   if (!TMDB_KEY) throw new Error('TMDB_API_KEY not set');
 
   const { genres = [], minScore = 6, yearRange, limit = 10 } = params;

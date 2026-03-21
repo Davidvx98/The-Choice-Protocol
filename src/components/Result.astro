@@ -500,16 +500,21 @@
       if (loadingText) loadingText.textContent = str.loading[0];
 
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30_000);
         const res = await fetch('/api/recommend', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: choice, answers, userName: name }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
         clearInterval(msgInterval);
         showResult(data, name, choice);
-      } catch {
+      } catch (err) {
+        console.error('[Result] Fetch error:', err);
         clearInterval(msgInterval);
         showResult({ recommendations: [] }, name, choice);
       }
