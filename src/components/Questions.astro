@@ -1,0 +1,421 @@
+---
+/**
+ * Questions - Preguntas dinámicas estilo narrativo
+ * No formularios típicos, sino tarjetas interactivas
+ */
+---
+
+<div id="questions-scene" class="scene scene-hidden" style="overflow-y:auto;">
+  <div class="max-w-3xl w-full mx-auto px-4 py-6">
+    <!-- Progress bar -->
+    <div class="mb-8">
+      <div class="flex justify-between text-xs text-gray-500 mb-2 font-mono">
+        <span id="q-progress-text">Pregunta 1 de 5</span>
+        <span id="q-progress-pct">0%</span>
+      </div>
+      <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+        <div id="q-progress-bar" class="h-full bg-gradient-to-r from-cyber-purple to-cyber-blue rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Question card -->
+    <div id="q-card" class="glass p-10 sm:p-14">
+      <p id="q-title" class="text-2xl sm:text-3xl font-sans font-semibold text-white mb-2"></p>
+      <p id="q-subtitle" class="text-gray-400 text-sm mb-10"></p>
+
+      <!-- Options grid -->
+      <div id="q-options" class="grid gap-3"></div>
+
+      <!-- Multi-select continue button (hidden by default) -->
+      <div id="q-multi-continue" class="mt-6 flex justify-end" style="display:none">
+        <button id="q-multi-btn" class="btn-cyber text-cyber-purple disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+          Continuar &nbsp;→
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  interface Question {
+    id: string;
+    title: string;
+    subtitle: string;
+    multi?: boolean;
+    options: { label: string; value: string; icon: string }[];
+  }
+
+  const questionsAnime: Question[] = [
+    {
+      id: 'mood',
+      title: '¿Cómo te sientes ahora mismo?',
+      subtitle: 'Tu estado de ánimo guiará la recomendación',
+      options: [
+        { label: 'Eufórico / Con energía',  value: 'energetic',   icon: '⚡' },
+        { label: 'Alegre y relajado',        value: 'happy',       icon: '☀️' },
+        { label: 'Nostálgico',               value: 'nostalgic',   icon: '🌅' },
+        { label: 'Melancólico',              value: 'melancholic', icon: '🌧️' },
+        { label: 'Necesito pensar',          value: 'thoughtful',  icon: '🌙' },
+        { label: 'Sin filtro, sorpréndeme',  value: 'random',      icon: '🎲' },
+      ],
+    },
+    {
+      id: 'genres',
+      title: '¿Qué géneros te atraen?',
+      subtitle: 'Puedes elegir varios — más datos, mejor resultado',
+      multi: true,
+      options: [
+        { label: 'Acción / Peleas',         value: 'action',   icon: '⚔️' },
+        { label: 'Romance / Drama',         value: 'romance',  icon: '💕' },
+        { label: 'Misterio / Thriller',     value: 'mystery',  icon: '🔍' },
+        { label: 'Comedia / Slice of life', value: 'comedy',   icon: '😄' },
+        { label: 'Ciencia ficción',         value: 'scifi',    icon: '🚀' },
+        { label: 'Fantasía / Isekai',       value: 'fantasy',  icon: '🔮' },
+        { label: 'Terror / Psicológico',    value: 'horror',   icon: '👁️' },
+        { label: 'Deportes / Competición',  value: 'sports',   icon: '🏆' },
+      ],
+    },
+    {
+      id: 'duration',
+      title: '¿Cuánto tiempo tienes?',
+      subtitle: 'Elegiremos algo que se ajuste a tu agenda',
+      options: [
+        { label: 'Película / OVA (~2h)',     value: 'short',  icon: '⏱️' },
+        { label: 'Serie corta (12 eps)',     value: 'medium', icon: '📺' },
+        { label: 'Serie media (13-26 eps)',  value: 'mid',    icon: '🗓️' },
+        { label: 'Saga larga (+50 eps)',     value: 'long',   icon: '📚' },
+      ],
+    },
+    {
+      id: 'protagonist',
+      title: '¿Con qué tipo de protagonista conectas?',
+      subtitle: 'El héroe de tu historia',
+      options: [
+        { label: 'Underdog que lo supera todo', value: 'underdog',  icon: '💪' },
+        { label: 'Antihéroe complejo',           value: 'antihero',  icon: '🗡️' },
+        { label: 'Inteligente y estratega',      value: 'strategic', icon: '♟️' },
+        { label: 'Grupo de amigos / equipo',     value: 'ensemble',  icon: '👫' },
+      ],
+    },
+    {
+      id: 'setting',
+      title: '¿En qué mundo te quieres perder?',
+      subtitle: 'El escenario de tu aventura',
+      options: [
+        { label: 'Mundo fantástico / magia',    value: 'fantasy_world',   icon: '🏰' },
+        { label: 'Japón cotidiano / realista',  value: 'daily_life',      icon: '🏫' },
+        { label: 'Futuro distópico / mecha',    value: 'dystopia',        icon: '🤖' },
+        { label: 'Otro mundo (isekai)',          value: 'isekai',          icon: '🌀' },
+        { label: 'Post-apocalíptico',           value: 'post_apocalypse', icon: '🌋' },
+        { label: 'Histórico / Feudal',          value: 'historical',      icon: '⛩️' },
+      ],
+    },
+    {
+      id: 'intensity',
+      title: '¿Qué tan intenso lo quieres?',
+      subtitle: 'La profundidad narrativa que buscas',
+      options: [
+        { label: 'Ligero y fácil de ver',   value: 'light',    icon: '🌸' },
+        { label: 'Entretenido y dinámico',  value: 'balanced', icon: '⚡' },
+        { label: 'Profundo y complejo',     value: 'deep',     icon: '🧠' },
+        { label: 'Oscuro y perturbador',    value: 'dark',     icon: '🖤' },
+      ],
+    },
+    {
+      id: 'extras',
+      title: '¿Qué no puede faltarle?',
+      subtitle: 'Tus ingredientes imprescindibles — elige los que quieras',
+      multi: true,
+      options: [
+        { label: 'OST épica / memorable',        value: 'ost',         icon: '🎵' },
+        { label: 'Giros de guion inesperados',   value: 'twists',      icon: '🌀' },
+        { label: 'Animación espectacular',       value: 'animation',   icon: '✨' },
+        { label: 'Personajes muy bien escritos', value: 'characters',  icon: '👥' },
+        { label: 'Romance destacado',            value: 'romance_sub', icon: '💞' },
+        { label: 'Final satisfactorio',          value: 'good_ending', icon: '🏁' },
+      ],
+    },
+  ];
+
+  const questionsMovie: Question[] = [
+    {
+      id: 'mood',
+      title: '¿Cómo te sientes ahora mismo?',
+      subtitle: 'Tu estado de ánimo guiará la recomendación',
+      options: [
+        { label: 'Quiero reír a carcajadas',    value: 'happy',       icon: '😂' },
+        { label: 'Quiero emocionarme / llorar', value: 'melancholic', icon: '😢' },
+        { label: 'Quiero adrenalina pura',      value: 'excited',     icon: '🔥' },
+        { label: 'Quiero reflexionar',          value: 'thoughtful',  icon: '💭' },
+        { label: 'Quiero algo romántico',       value: 'romantic',    icon: '🌹' },
+        { label: 'Sin filtro, sorpréndeme',     value: 'random',      icon: '🎲' },
+      ],
+    },
+    {
+      id: 'genres',
+      title: '¿Qué géneros te atraen?',
+      subtitle: 'Puedes elegir varios — más datos, mejor resultado',
+      multi: true,
+      options: [
+        { label: 'Acción / Aventura', value: 'action',      icon: '💥' },
+        { label: 'Drama / Romance',   value: 'romance',     icon: '❤️' },
+        { label: 'Terror / Suspense', value: 'horror',      icon: '👻' },
+        { label: 'Comedia',           value: 'comedy',      icon: '🤣' },
+        { label: 'Ciencia ficción',   value: 'scifi',       icon: '🛸' },
+        { label: 'Thriller / Crimen', value: 'thriller',    icon: '🔪' },
+        { label: 'Animación',         value: 'animation',   icon: '🎠' },
+        { label: 'Documental',        value: 'documentary', icon: '📹' },
+      ],
+    },
+    {
+      id: 'duration',
+      title: '¿Cuánto tiempo tienes?',
+      subtitle: 'Para ajustar la duración',
+      options: [
+        { label: 'Cortita (<90 min)',      value: 'short',  icon: '⏱️' },
+        { label: 'Estándar (90-120 min)', value: 'medium', icon: '🎬' },
+        { label: 'Larga (2-2.5h)',        value: 'long2',  icon: '🎞️' },
+        { label: 'Épica (+2.5h)',         value: 'epic',   icon: '🏔️' },
+      ],
+    },
+    {
+      id: 'experience',
+      title: '¿Qué tipo de experiencia buscas?',
+      subtitle: 'La sensación que quieres llevarte',
+      options: [
+        { label: 'Desconectar y evadirme',      value: 'escape',    icon: '🏖️' },
+        { label: 'Que me haga pensar días',     value: 'thinking',  icon: '🧩' },
+        { label: 'Que no pueda parar de verla', value: 'gripping',  icon: '😮' },
+        { label: 'Que conecte emocionalmente',  value: 'emotional', icon: '💛' },
+      ],
+    },
+    {
+      id: 'intensity',
+      title: '¿Qué tan intensa la quieres?',
+      subtitle: 'El nivel de complejidad narrativa',
+      options: [
+        { label: 'Ligera, para pasar el rato',   value: 'light',    icon: '🍿' },
+        { label: 'Con sustancia pero accesible', value: 'balanced', icon: '⚖️' },
+        { label: 'Que me vuele la cabeza',       value: 'deep',     icon: '🤯' },
+        { label: 'Oscura y cruda',               value: 'dark',     icon: '🖤' },
+      ],
+    },
+    {
+      id: 'era',
+      title: '¿De qué época prefieres?',
+      subtitle: 'El sabor temporal de tu película',
+      options: [
+        { label: 'Clásico (antes del 2000)', value: 'classic', icon: '📼' },
+        { label: 'Años 2000-2010',           value: '2000s',   icon: '💿' },
+        { label: 'Años 2010-2020',           value: '2010s',   icon: '📱' },
+        { label: 'Muy reciente (2020+)',      value: 'recent',  icon: '🆕' },
+      ],
+    },
+    {
+      id: 'extras',
+      title: '¿Qué ingredientes no pueden faltar?',
+      subtitle: 'Elige todos los que quieras',
+      multi: true,
+      options: [
+        { label: 'Banda sonora memorable',         value: 'ost',         icon: '🎶' },
+        { label: 'Giros de guion explosivos',      value: 'twists',      icon: '💣' },
+        { label: 'Fotografía / dirección visual',  value: 'visual',      icon: '📸' },
+        { label: 'Actuaciones inolvidables',       value: 'acting',      icon: '🎭' },
+        { label: 'Historia de amor',               value: 'romance_sub', icon: '💞' },
+        { label: 'Final que te deja pensando',     value: 'open_ending', icon: '❓' },
+      ],
+    },
+  ];
+
+  function initQuestions() {
+    const scene = document.getElementById('questions-scene');
+    const card = document.getElementById('q-card');
+    const titleEl = document.getElementById('q-title');
+    const subtitleEl = document.getElementById('q-subtitle');
+    const optionsEl = document.getElementById('q-options');
+    const progressBar = document.getElementById('q-progress-bar');
+    const progressText = document.getElementById('q-progress-text');
+    const progressPct = document.getElementById('q-progress-pct');
+    const multiContinue = document.getElementById('q-multi-continue');
+    const multiBtn = document.getElementById('q-multi-btn') as HTMLButtonElement | null;
+
+    if (!scene || !card || !titleEl || !subtitleEl || !optionsEl || !progressBar || !progressText || !progressPct) return;
+
+    let currentIndex = 0;
+    let questions: Question[] = [];
+    const answers: Record<string, string> = {};
+    // Multi-select state: set of selected values for current question
+    let multiSelected: Set<string> = new Set();
+
+    function renderQuestion(index: number) {
+      const q = questions[index];
+      if (!q) return;
+
+      multiSelected = new Set();
+
+      const total = questions.length;
+      const pct = Math.round((index / total) * 100);
+      progressText!.textContent = `Pregunta ${index + 1} de ${total}`;
+      progressPct!.textContent = `${pct}%`;
+      progressBar!.style.width = `${pct}%`;
+
+      titleEl!.textContent = q.title;
+      subtitleEl!.textContent = q.subtitle;
+      optionsEl!.innerHTML = '';
+
+      // Adaptive grid columns based on option count
+      const count = q.options.length;
+      if (count <= 4) {
+        optionsEl!.className = 'grid gap-3 grid-cols-1 sm:grid-cols-2';
+      } else if (count <= 6) {
+        optionsEl!.className = 'grid gap-3 grid-cols-2 sm:grid-cols-3';
+      } else {
+        optionsEl!.className = 'grid gap-3 grid-cols-2 sm:grid-cols-4';
+      }
+
+      // Multi-select continue button
+      if (multiContinue) {
+        multiContinue.style.display = q.multi ? 'flex' : 'none';
+        if (multiBtn) { multiBtn.disabled = true; }
+      }
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.dataset.value = opt.value;
+        btn.className = `q-opt group flex flex-col items-center gap-2 p-4 rounded-xl 
+                         bg-white/5 border border-white/10 
+                         hover:border-cyber-purple/50 hover:bg-cyber-purple/10
+                         transition-all duration-300 text-center cursor-pointer`;
+        btn.innerHTML = `
+          <span class="text-2xl sm:text-3xl">${opt.icon}</span>
+          <span class="text-gray-300 group-hover:text-white transition-colors font-sans text-xs sm:text-sm leading-snug">${opt.label}</span>
+        `;
+
+        if (q.multi) {
+          btn.addEventListener('click', () => toggleMultiOption(q.id, opt.value, btn));
+        } else {
+          btn.addEventListener('click', () => selectOption(q.id, opt.value, btn));
+        }
+        optionsEl!.appendChild(btn);
+      });
+
+      // Animar todos los botones a la vez, sin escalonado que deja los últimos en opacity:0
+      gsap.from(optionsEl!.querySelectorAll('button'), {
+        y: 16,
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.out',
+      });
+    }
+
+    function toggleMultiOption(questionId: string, value: string, btnEl: HTMLElement) {
+      if (multiSelected.has(value)) {
+        multiSelected.delete(value);
+        gsap.to(btnEl, { borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', scale: 1, duration: 0.2 });
+        btnEl.classList.remove('ring-2', 'ring-cyber-purple');
+      } else {
+        multiSelected.add(value);
+        gsap.to(btnEl, { borderColor: 'rgba(176,38,255,0.7)', backgroundColor: 'rgba(176,38,255,0.12)', scale: 1.03, duration: 0.2 });
+        btnEl.classList.add('ring-2', 'ring-cyber-purple');
+      }
+      if (multiBtn) {
+        multiBtn.disabled = multiSelected.size === 0;
+        multiBtn.textContent = multiSelected.size > 0
+          ? `Continuar con ${multiSelected.size} seleccionado${multiSelected.size > 1 ? 's' : ''} →`
+          : 'Continuar →';
+      }
+    }
+
+    function commitMultiAndAdvance(questionId: string) {
+      answers[questionId] = [...multiSelected].join(',');
+
+      // Fill progress bar immediately on selection
+      const total = questions.length;
+      const nextPct = Math.round(((currentIndex + 1) / total) * 100);
+      progressBar!.style.width = `${nextPct}%`;
+      progressPct!.textContent = `${nextPct}%`;
+
+      advanceQuestion();
+    }
+
+    multiBtn?.addEventListener('click', () => {
+      const q = questions[currentIndex];
+      if (q?.multi) commitMultiAndAdvance(q.id);
+    });
+
+    function selectOption(questionId: string, value: string, btnEl: HTMLElement) {
+      answers[questionId] = value;
+
+      // Fill progress bar immediately on selection
+      const total = questions.length;
+      const nextPct = Math.round(((currentIndex + 1) / total) * 100);
+      progressBar!.style.width = `${nextPct}%`;
+      progressPct!.textContent = `${nextPct}%`;
+
+      const allBtns = optionsEl!.querySelectorAll('button');
+      allBtns.forEach(b => {
+        if (b !== btnEl) gsap.to(b, { opacity: 0.3, scale: 0.95, duration: 0.3 });
+      });
+      gsap.to(btnEl, { scale: 1.05, borderColor: 'rgba(176, 38, 255, 0.7)', duration: 0.3 });
+
+      setTimeout(advanceQuestion, 500);
+    }
+
+    function advanceQuestion() {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        gsap.to(card, {
+          x: -30,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.in',
+          onComplete: () => {
+            renderQuestion(currentIndex);
+            gsap.fromTo(card, { x: 30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.out' });
+          },
+        });
+      } else {
+        finishQuestions();
+      }
+    }
+
+    function finishQuestions() {
+      progressBar!.style.width = '100%';
+      progressPct!.textContent = '100%';
+
+      // Save answers
+      localStorage.setItem('userAnswers', JSON.stringify(answers));
+
+      gsap.to(scene, {
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power2.in',
+        onComplete: () => {
+          scene!.classList.add('scene-hidden');
+          scene!.classList.remove('scene-visible');
+          window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'questions', to: 'result' } }));
+        },
+      });
+    }
+
+    window.addEventListener('scene:advance', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.to !== 'questions') return;
+
+      const choice = localStorage.getItem('pillChoice');
+      questions = choice === 'anime' ? questionsAnime : questionsMovie;
+      currentIndex = 0;
+
+      scene.classList.remove('scene-hidden');
+      scene.classList.add('scene-visible');
+
+      gsap.from(scene, { opacity: 0, duration: 0.5 });
+      renderQuestion(0);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initQuestions);
+  initQuestions();
+</script>

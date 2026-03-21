@@ -1,0 +1,442 @@
+---
+/**
+ * Index page - Orquesta todas las escenas del flujo narrativo
+ * Intro (Sobre + Carta) → Pills → Questions → Result
+ */
+import Layout from '../layouts/Layout.astro';
+import Envelope from '../components/Envelope.astro';
+import Letter from '../components/Letter.astro';
+import Pills from '../components/Pills.astro';
+import Questions from '../components/Questions.astro';
+import Result from '../components/Result.astro';
+---
+
+<Layout>
+  <main class="relative w-full h-screen overflow-hidden">
+    <!-- Todas las escenas se apilan en posición absoluta -->
+    <Envelope />
+    <Letter />
+    <Pills />
+    <Questions />
+    <Result />
+
+    <!-- ⚙️ Settings badge — bottom-left -->
+    <div id="settings-badge-wrap" class="fixed bottom-4 left-4 z-50">
+      <!-- The glowing badge -->
+      <button id="settings-badge"
+        aria-label="Configuración"
+        class="relative flex items-center gap-2 px-3 py-2 rounded-xl
+               bg-black/60 border border-white/10 backdrop-blur-md
+               text-gray-400 text-xs font-mono
+               hover:border-cyber-purple/60 hover:text-cyber-purple
+               transition-all duration-300 cursor-pointer select-none">
+        <span id="settings-badge-icon" class="text-base leading-none">⚙️</span>
+        <span id="settings-badge-label" class="tracking-widest uppercase hidden sm:inline">Config</span>
+        <!-- Pulse ring — animated by JS -->
+        <span id="settings-pulse"
+          class="absolute -inset-1 rounded-xl border border-cyber-purple/50 opacity-0 pointer-events-none"></span>
+      </button>
+
+      <!-- Expanded panel — toggled by click -->
+      <div id="settings-panel"
+        class="absolute bottom-full left-0 mb-3 w-64
+               glass rounded-2xl px-5 py-4 flex-col gap-4
+               hidden">
+
+        <!-- Header -->
+        <p class="text-cyber-purple text-xs font-mono tracking-widest uppercase border-b border-white/5 pb-2"
+           id="cfg-title">Settings</p>
+
+        <!-- Volume -->
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <label for="settings-vol" class="text-gray-400 text-xs font-mono flex items-center gap-1.5">
+              🔊 <span id="cfg-vol-label">Music volume</span>
+            </label>
+            <span id="settings-vol-pct" class="text-cyber-purple text-xs font-mono">15%</span>
+          </div>
+          <input id="settings-vol" type="range" min="0" max="1" step="0.05" value="0.15"
+            class="w-full accent-cyber-purple cursor-pointer h-1" aria-label="Volume" />
+        </div>
+
+        <!-- Skip animations -->
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center justify-between">
+            <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">⚡ <span id="cfg-skip-title">Skip animations</span></p>
+            <button id="settings-skip-toggle"
+              role="switch" aria-checked="false"
+              class="relative w-10 h-5 rounded-full transition-colors duration-300 flex-shrink-0 focus:outline-none"
+              style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);">
+              <span id="settings-skip-thumb"
+                class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-all duration-200"
+                style="background:#6b7280;"></span>
+            </button>
+          </div>
+          <p id="cfg-skip-desc" class="text-gray-600 text-xs leading-snug">Go directly to pill choice. Default name: Viajero.</p>
+        </div>
+
+        <!-- Reset experience -->
+        <div class="flex flex-col gap-1">
+          <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">🔄 <span id="cfg-reset-title">Reset experience</span></p>
+          <p id="cfg-reset-desc" class="text-gray-600 text-xs leading-snug">Clears name, choice and answers. Returns to start.</p>
+          <button id="settings-reset"
+            class="mt-1 btn-cyber text-red-400 text-xs py-2">
+            <span id="cfg-reset-btn">Reset</span>
+          </button>
+        </div>
+
+        <!-- History -->
+        <div class="flex flex-col gap-1">
+          <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">📋 <span id="cfg-hist-title">Session history</span></p>
+          <p id="cfg-hist-desc" class="text-gray-600 text-xs leading-snug">Review your saved recommendations.</p>
+          <button id="settings-history"
+            class="mt-1 btn-cyber text-cyber-blue text-xs py-2">
+            <span id="cfg-hist-btn">View history</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</Layout>
+
+<script>
+  // ── Scene debug ────────────────────────────────────────────────────────────
+  window.addEventListener('scene:advance', (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    console.log(`[Scene] ${detail.from} → ${detail.to}`);
+  });
+
+  // ── Settings panel ─────────────────────────────────────────────────────────
+  const settingsVol    = document.getElementById('settings-vol')     as HTMLInputElement | null;
+  const settingsVolPct = document.getElementById('settings-vol-pct') as HTMLElement | null;
+  const settingsPulse  = document.getElementById('settings-pulse')   as HTMLElement | null;
+  const settingsPanel  = document.getElementById('settings-panel')   as HTMLElement | null;
+  const settingsBadge  = document.getElementById('settings-badge')   as HTMLElement | null;
+
+  let settingsOpen = false;
+  settingsBadge?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    settingsOpen = !settingsOpen;
+    if (settingsPanel) {
+      settingsPanel.classList.toggle('hidden', !settingsOpen);
+      settingsPanel.classList.toggle('flex', settingsOpen);
+    }
+    if (settingsBadge) settingsBadge.style.color = settingsOpen ? 'var(--color-cyber-purple, #b026ff)' : '';
+  });
+  // Close panel when clicking outside
+  document.addEventListener('click', (e) => {
+    if (settingsOpen && !document.getElementById('settings-badge-wrap')?.contains(e.target as Node)) {
+      settingsOpen = false;
+      settingsPanel?.classList.add('hidden');
+      settingsPanel?.classList.remove('flex');
+      if (settingsBadge) settingsBadge.style.color = '';
+    }
+  });
+
+  // Sync settings volume → YouTube players
+  settingsVol?.addEventListener('input', () => {
+    const v = parseFloat(settingsVol.value);
+    if (settingsVolPct) settingsVolPct.textContent = `${Math.round(v * 100)}%`;
+    const vol = Math.round(v * 100);
+    Object.values(ytPlayers).forEach(p => { try { p.setVolume(vol); } catch {} });
+  });
+
+  document.getElementById('settings-reset')?.addEventListener('click', () => {
+    // Clear all user-session data (including introDone so typing is slow again)
+    ['userName', 'pillChoice', 'userAnswers', 'introDone'].forEach(k => localStorage.removeItem(k));
+    window.location.reload();
+  });
+
+  document.getElementById('settings-history')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('history:open'));
+  });
+
+  // ── Skip animations toggle ─────────────────────────────────────────────────
+  const skipToggleBtn   = document.getElementById('settings-skip-toggle') as HTMLElement | null;
+  const skipThumb       = document.getElementById('settings-skip-thumb')  as HTMLElement | null;
+  const DEFAULT_NAME_EN = 'Traveler';
+  const DEFAULT_NAME_ES = 'Viajero';
+
+  function getDefaultName() {
+    return (localStorage.getItem('lang') || 'en') === 'es' ? DEFAULT_NAME_ES : DEFAULT_NAME_EN;
+  }
+
+  function setSkipUI(on: boolean) {
+    if (!skipToggleBtn || !skipThumb) return;
+    skipToggleBtn.setAttribute('aria-checked', String(on));
+    skipToggleBtn.style.background = on ? 'rgba(176,38,255,0.6)' : 'rgba(255,255,255,0.08)';
+    skipToggleBtn.style.borderColor = on ? 'rgba(176,38,255,0.8)' : 'rgba(255,255,255,0.12)';
+    skipThumb.style.background  = on ? '#fff' : '#6b7280';
+    skipThumb.style.transform   = on ? 'translateX(20px)' : 'translateX(0)';
+  }
+
+  function doSkipToPills() {
+    if (!localStorage.getItem('userName')) {
+      localStorage.setItem('userName', getDefaultName());
+    }
+    const introScene = document.getElementById('intro-scene');
+    if (introScene) {
+      introScene.classList.remove('scene-visible');
+      introScene.classList.add('scene-hidden');
+    }
+    window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'intro', to: 'pills' } }));
+    // Close the settings panel after skip
+    settingsOpen = false;
+    settingsPanel?.classList.add('hidden');
+    settingsPanel?.classList.remove('flex');
+    if (settingsBadge) settingsBadge.style.color = '';
+  }
+
+  // Init toggle visual from saved state
+  const skipEnabled = localStorage.getItem('skipAnimations') === '1';
+  setSkipUI(skipEnabled);
+
+  skipToggleBtn?.addEventListener('click', () => {
+    const nowOn = skipToggleBtn.getAttribute('aria-checked') !== 'true';
+    setSkipUI(nowOn);
+    if (nowOn) {
+      localStorage.setItem('skipAnimations', '1');
+      // Immediately skip if still on intro
+      const introScene = document.getElementById('intro-scene');
+      if (introScene?.classList.contains('scene-visible')) {
+        doSkipToPills();
+      }
+    } else {
+      localStorage.removeItem('skipAnimations');
+    }
+  });
+
+  // Auto-skip on page load if flag is set
+  if (localStorage.getItem('skipAnimations') === '1') {
+    setTimeout(doSkipToPills, 50);
+  }
+
+  // Periodic pulse glow on the settings badge
+  function pulseBadge() {
+    if (!settingsPulse) return;
+    settingsPulse.style.transition = 'opacity 0.4s ease';
+    settingsPulse.style.opacity = '1';
+    setTimeout(() => { settingsPulse.style.opacity = '0'; }, 600);
+  }
+  setInterval(pulseBadge, 5000); // pulse every 5 s
+  setTimeout(pulseBadge, 1500);  // first pulse on load
+
+  // ── Language toggle ────────────────────────────────────────────────────────
+  const langToggleBtn = document.getElementById('lang-toggle') as HTMLElement | null;
+  const langFlagEl    = document.getElementById('lang-flag')   as HTMLElement | null;
+  const langLabelEl   = document.getElementById('lang-label')  as HTMLElement | null;
+  let currentLang: string = localStorage.getItem('lang') || 'en';
+
+  function applyLang(lang: string) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    if (langFlagEl)  langFlagEl.textContent  = lang === 'en' ? '🇬🇧' : '🇪🇸';
+    if (langLabelEl) langLabelEl.textContent = lang.toUpperCase();
+    window.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
+  }
+  langToggleBtn?.addEventListener('click', () => applyLang(currentLang === 'en' ? 'es' : 'en'));
+
+  const CFG_STRINGS: Record<string, Record<string, string>> = {
+    en: {
+      title: 'Settings', volLabel: 'Music volume', resetTitle: 'Reset experience',
+      resetDesc: 'Clears name, choice and answers. Returns to start.', resetBtn: 'Reset',
+      histTitle: 'Session history', histDesc: 'Review your saved recommendations.', histBtn: 'View history',
+      skipTitle: 'Skip animations', skipDesc: 'Go directly to pill choice. Default name: Traveler.',
+    },
+    es: {
+      title: 'Configuración', volLabel: 'Volumen de música', resetTitle: 'Reiniciar experiencia',
+      resetDesc: 'Borra nombre, elección y respuestas. Vuelves al inicio.', resetBtn: 'Reiniciar',
+      histTitle: 'Historial de sesiones', histDesc: 'Consulta tus recomendaciones guardadas.', histBtn: 'Ver historial',
+      skipTitle: 'Quitar animaciones', skipDesc: 'Va directo a elegir la píldora. Nombre predefinido: Viajero.',
+    },
+  };
+
+  function setCfgText(id: string, text: string) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function applyCfgLang(lang: string) {
+    const c = CFG_STRINGS[lang] || CFG_STRINGS['en'];
+    setCfgText('cfg-title',      c.title);
+    setCfgText('cfg-vol-label',  c.volLabel);
+    setCfgText('cfg-skip-title', c.skipTitle);
+    setCfgText('cfg-skip-desc',  c.skipDesc);
+    setCfgText('cfg-reset-title', c.resetTitle);
+    setCfgText('cfg-reset-desc', c.resetDesc);
+    setCfgText('cfg-reset-btn',  c.resetBtn);
+    setCfgText('cfg-hist-title', c.histTitle);
+    setCfgText('cfg-hist-desc',  c.histDesc);
+    setCfgText('cfg-hist-btn',   c.histBtn);
+  }
+
+  // Listen for lang changes to update settings panel
+  window.addEventListener('lang:change', (e: Event) => {
+    applyCfgLang((e as CustomEvent).detail.lang || 'en');
+  });
+
+  // Dispatch on load so components can pick up saved preference
+  setTimeout(() => applyLang(currentLang), 0);
+
+  // ── Music player (YouTube IFrame API, scene-aware) ──────────────────────
+  const SCENE_TRACKS: Record<string, { name: string; videoId: string; playlist?: string }> = {
+    intro:       { name: 'Las píldoras – Inicio',        videoId: '0zYw5IuEUZ0' },
+    questions:   { name: 'Las píldoras – Preguntas',     videoId: 'UqFTDTof0WM', playlist: 'UqFTDTof0WM,4-aqOqM8HWU' },
+    anime:       { name: 'Las píldoras – Anime',         videoId: 'jT2V7qLE5DA' },
+    anime_sad:   { name: 'Las píldoras – Anime Triste',  videoId: 'FpSu77yl5W0', playlist: 'FpSu77yl5W0,u_upMKUm16M' },
+    anime_drama: { name: 'Las píldoras – Anime Drama',   videoId: 'jK7vncSpcFI' },
+  };
+
+  const DEFAULT_VOLUME = 15; // medium-low (0–100)
+
+  let ytPlayers: Record<string, any> = {};
+  let activeVideoId = SCENE_TRACKS.intro.videoId;
+  let playing = false;
+  let pendingPlay = false;
+
+  // Build hidden containers for each YouTube player
+  const ytContainer = document.createElement('div');
+  ytContainer.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;overflow:hidden;';
+  Object.values(SCENE_TRACKS).forEach(({ videoId }) => {
+    const div = document.createElement('div');
+    div.id = `yt-${videoId}`;
+    ytContainer.appendChild(div);
+  });
+  document.body.appendChild(ytContainer);
+
+  function getVolume(): number {
+    const sv = document.getElementById('settings-vol') as HTMLInputElement | null;
+    return sv ? Math.round(parseFloat(sv.value) * 100) : DEFAULT_VOLUME;
+  }
+
+  const FADE_MS = 1500; // duración del crossfade en ms
+
+  function fadeVolume(player: any, from: number, to: number, duration: number, onDone?: () => void) {
+    const steps    = 30;
+    const interval = duration / steps;
+    const delta    = (to - from) / steps;
+    let step = 0;
+    const iv = setInterval(() => {
+      step++;
+      const vol = Math.round(Math.max(0, Math.min(100, from + delta * step)));
+      try { player.setVolume(vol); } catch {}
+      if (step >= steps) {
+        clearInterval(iv);
+        onDone?.();
+      }
+    }, interval);
+  }
+
+  function stopCurrent() {
+    const p = ytPlayers[activeVideoId];
+    if (!p) return;
+    const vol = getVolume();
+    fadeVolume(p, vol, 0, FADE_MS, () => {
+      try { p.pauseVideo(); p.setVolume(vol); } catch {}
+    });
+  }
+
+  function startCurrent() {
+    const p = ytPlayers[activeVideoId];
+    if (!p) { pendingPlay = true; return; }
+    try {
+      p.setVolume(0);
+      p.playVideo();
+      fadeVolume(p, 0, getVolume(), FADE_MS);
+      playing = true;
+    } catch { pendingPlay = true; }
+  }
+
+  function switchTrack(videoId: string) {
+    if (videoId === activeVideoId) return;
+    const prevId    = activeVideoId;
+    const targetVol = getVolume();
+    activeVideoId   = videoId;
+    if (!playing) return;
+
+    // Fade out current track
+    const prevPlayer = ytPlayers[prevId];
+    if (prevPlayer) {
+      fadeVolume(prevPlayer, targetVol, 0, FADE_MS, () => {
+        try { prevPlayer.pauseVideo(); prevPlayer.setVolume(targetVol); } catch {}
+      });
+    }
+
+    // Fade in new track
+    const nextPlayer = ytPlayers[videoId];
+    if (nextPlayer) {
+      try {
+        nextPlayer.setVolume(0);
+        nextPlayer.playVideo();
+        fadeVolume(nextPlayer, 0, targetVol, FADE_MS);
+      } catch { pendingPlay = true; }
+    } else {
+      pendingPlay = true;
+    }
+  }
+
+  // Initialise YouTube IFrame API
+  (window as any).onYouTubeIframeAPIReady = function () {
+    Object.values(SCENE_TRACKS).forEach(({ videoId, playlist }) => {
+      ytPlayers[videoId] = new (window as any).YT.Player(`yt-${videoId}`, {
+        height: '1',
+        width: '1',
+        videoId,
+        playerVars: { autoplay: 0, controls: 0, disablekb: 1, loop: 1, playlist: playlist ?? videoId },
+        events: {
+          onReady(ev: any) {
+            ev.target.setVolume(DEFAULT_VOLUME);
+            if (pendingPlay && videoId === activeVideoId) {
+              ev.target.playVideo();
+              playing = true;
+              pendingPlay = false;
+            }
+          },
+        },
+      });
+    });
+  };
+
+  // Load the API script (sets onYouTubeIframeAPIReady first, then loads script)
+  if (!(window as any).YT) {
+    const ytScript = document.createElement('script');
+    ytScript.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(ytScript);
+  } else {
+    // API already present (e.g. back-navigation)
+    (window as any).onYouTubeIframeAPIReady();
+  }
+
+  // La música solo inicia cuando el usuario hace click en el sobre
+  window.addEventListener('envelope:opened', () => {
+    if (!playing) startCurrent();
+  }, { once: true });
+
+  // Scene-based track switching
+  window.addEventListener('scene:advance', (e: Event) => {
+    if (!playing) return;
+    const { to } = (e as CustomEvent).detail;
+    if (to === 'questions') {
+      switchTrack(SCENE_TRACKS.questions.videoId);
+    } else if (to === 'result') {
+      if (localStorage.getItem('pillChoice') === 'anime') {
+        const answers: Record<string, string> = JSON.parse(localStorage.getItem('userAnswers') || '{}');
+        const mood   = answers['mood']   ?? '';
+        const genres = answers['genres'] ?? '';
+        if (mood === 'melancholic') {
+          switchTrack(SCENE_TRACKS.anime_sad.videoId);
+        } else if (mood === 'nostalgic' || genres.includes('romance')) {
+          switchTrack(SCENE_TRACKS.anime_drama.videoId);
+        } else {
+          switchTrack(SCENE_TRACKS.anime.videoId);
+        }
+      }
+    } else if (to === 'pills' || to === 'message') {
+      switchTrack(SCENE_TRACKS.intro.videoId);
+    }
+  });
+
+
+
+</script>

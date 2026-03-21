@@ -1,0 +1,573 @@
+---
+/**
+ * Result — 3 recommendations carousel with i18n + Gemini translation
+ */
+---
+
+<div id="result-scene" class="scene scene-hidden" style="overflow-y:auto;align-items:flex-start;">
+  <div class="max-w-4xl w-full mx-auto px-4 py-10">
+
+    <!-- Loading -->
+    <div id="result-loading" class="flex flex-col items-center gap-6 py-20">
+      <div class="relative">
+        <div class="w-20 h-20 rounded-full border-2 border-cyber-purple/30 border-t-cyber-purple animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center"><span class="text-2xl">🔮</span></div>
+      </div>
+      <div class="text-center space-y-2">
+        <p id="loading-text" class="text-gray-300 font-mono text-sm">Consulting the oracle...</p>
+        <p id="loading-sub" class="text-gray-600 text-xs">Analyzing your answers with AI</p>
+      </div>
+    </div>
+
+    <!-- Result content -->
+    <div id="result-content" class="hidden space-y-6">
+      <div class="text-center mb-8 space-y-2">
+        <p id="result-label" class="text-cyber-purple text-xs font-mono tracking-widest uppercase">Your recommendations</p>
+        <h2 id="result-header" class="text-2xl sm:text-3xl font-sans font-bold text-white"></h2>
+      </div>
+
+      <!-- ── Carousel ── -->
+      <div id="result-carousel" class="relative" style="overflow:hidden; padding-bottom:52px; min-height:420px;">
+        <!-- Cards sit here, absolutely positioned by GSAP -->
+        <div id="result-cards" class="relative w-full" style="min-height:380px;"></div>
+        <!-- Nav arrows -->
+        <button id="carousel-prev" aria-label="Previous"
+          class="absolute left-0 top-1/2 z-20
+                 w-10 h-10 rounded-full
+                 bg-black/70 border border-white/15 backdrop-blur-md
+                 text-gray-400 hover:text-cyber-purple hover:border-cyber-purple/50
+                 transition-all flex items-center justify-center text-2xl font-extralight select-none"
+          style="transform:translateY(-50%);">&#8249;</button>
+        <button id="carousel-next" aria-label="Next"
+          class="absolute right-0 top-1/2 z-20
+                 w-10 h-10 rounded-full
+                 bg-black/70 border border-white/15 backdrop-blur-md
+                 text-gray-400 hover:text-cyber-purple hover:border-cyber-purple/50
+                 transition-all flex items-center justify-center text-2xl font-extralight select-none"
+          style="transform:translateY(-50%);">&#8250;</button>
+        <!-- Dots -->
+        <div id="carousel-dots" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2.5"></div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-4 mt-4">
+        <button id="btn-retry" class="btn-cyber text-cyber-purple">🔄 <span id="btn-retry-label">Try again</span></button>
+        <button id="btn-history" class="btn-cyber text-cyber-blue">📋 <span id="btn-history-label">View history</span></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Historial overlay -->
+<div id="history-panel" class="scene scene-hidden"
+     style="overflow-y:auto;align-items:flex-start;z-index:100;background:rgba(10,10,15,0.97);">
+  <div class="max-w-3xl w-full mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+      <div>
+        <p class="text-cyber-purple text-xs font-mono tracking-widest uppercase mb-1" id="hist-label-text">Saved sessions</p>
+        <h2 class="text-xl font-sans font-bold text-white">📋 <span id="hist-title-text">History</span></h2>
+      </div>
+      <button id="btn-close-history" class="btn-cyber text-gray-400 text-xs"><span id="hist-close-text">&#10005; Close</span></button>
+    </div>
+    <div id="history-list" class="space-y-6"></div>
+    <p id="history-empty" class="hidden text-gray-600 font-mono text-center py-16 text-sm">
+      No recommendations saved yet.<br/>Complete the flow to create your first entry.
+    </p>
+  </div>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const HISTORY_KEY = 'recommendationHistory';
+
+  // ── i18n ──────────────────────────────────────────────────────────────────────
+  type Lang = 'en' | 'es';
+  const STRINGS: Record<Lang, {
+    loading: string[]; loadingSub: string; label: string;
+    header: (n: string) => string; ranks: string[];
+    retry: string; history: string; noResults: string; trailer: string;
+    translating: string; histLabel: string; histTitle: string;
+    histEmpty: string; histClose: string; typeAnime: string; typeMovies: string;
+  }> = {
+    en: {
+      loading: ['Consulting the oracle...', 'Analyzing your answers...', 'Searching parallel dimensions...', 'Finding perfect options...', 'Almost ready...'],
+      loadingSub: 'Analyzing your answers with AI',
+      label: 'Your recommendations',
+      header: (n) => `For you, ${n}`,
+      ranks: ['Main recommendation', 'Second option', 'Third option'],
+      retry: 'Try again', history: 'View history',
+      noResults: "Couldn't generate recommendations. Try again.",
+      trailer: '🎬 Watch trailer', translating: 'Translating...',
+      histLabel: 'Saved sessions', histTitle: 'History',
+      histEmpty: 'No recommendations saved yet.\nComplete the flow to create your first entry.',
+      histClose: '✕ Close', typeAnime: '🔴 Anime', typeMovies: '🔵 Movies',
+    },
+    es: {
+      loading: ['Consultando el oráculo...', 'Analizando tus respuestas...', 'Buscando en dimensiones paralelas...', 'Encontrando las opciones perfectas...', 'Casi listo...'],
+      loadingSub: 'Analizando tus respuestas con IA',
+      label: 'Tus recomendaciones',
+      header: (n) => `Para ti, ${n}`,
+      ranks: ['Recomendación principal', 'Segunda opción', 'Tercera opción'],
+      retry: 'Intentar de nuevo', history: 'Ver historial',
+      noResults: 'No pudimos generar recomendaciones. Intenta de nuevo.',
+      trailer: '🎬 Ver trailer', translating: 'Traduciendo...',
+      histLabel: 'Sesiones guardadas', histTitle: 'Historial',
+      histEmpty: 'Aún no hay recomendaciones guardadas.\nCompleta el flujo para crear tu primera entrada.',
+      histClose: '✕ Cerrar', typeAnime: '🔴 Anime', typeMovies: '🔵 Películas',
+    },
+  };
+
+  function esc(s: string): string {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function initResult() {
+    const scene         = document.getElementById('result-scene');
+    const loading       = document.getElementById('result-loading');
+    const content       = document.getElementById('result-content');
+    const loadingText   = document.getElementById('loading-text');
+    const loadingSub    = document.getElementById('loading-sub');
+    const btnRetry      = document.getElementById('btn-retry');
+    const btnHistoryBtn = document.getElementById('btn-history');
+    const headerEl      = document.getElementById('result-header');
+    const resultLabel   = document.getElementById('result-label');
+    const cardsEl       = document.getElementById('result-cards');
+    const prevBtn       = document.getElementById('carousel-prev');
+    const nextBtn       = document.getElementById('carousel-next');
+    const dotsEl        = document.getElementById('carousel-dots');
+    const historyPanel  = document.getElementById('history-panel');
+    const btnCloseHist  = document.getElementById('btn-close-history');
+    const historyList   = document.getElementById('history-list');
+    const historyEmpty  = document.getElementById('history-empty');
+    const retryLabel    = document.getElementById('btn-retry-label');
+    const histLabel     = document.getElementById('btn-history-label');
+    const histLabelText = document.getElementById('hist-label-text');
+    const histTitleText = document.getElementById('hist-title-text');
+    const histCloseText = document.getElementById('hist-close-text');
+
+    if (!scene || !loading || !content) return;
+
+    // ── State ────────────────────────────────────────────────────────────────────
+    let lang: Lang = (localStorage.getItem('lang') || 'en') as Lang;
+    let currentRecs: any[] = [];
+    let _currentName = '';
+    let _currentType = '';
+    let activeIdx = 0;
+    let cards: HTMLElement[] = [];
+    let autoTimer: ReturnType<typeof setInterval> | null = null;
+    const translationCache = new Map<string, string>();
+
+    const s = () => STRINGS[lang];
+
+    // ── Static strings ────────────────────────────────────────────────────────────
+    function updateStaticStrings() {
+      const str = s();
+      if (resultLabel)   resultLabel.textContent  = str.label;
+      if (retryLabel)    retryLabel.textContent    = str.retry;
+      if (histLabel)     histLabel.textContent     = str.history;
+      if (loadingSub)    loadingSub.textContent    = str.loadingSub;
+      if (histLabelText) histLabelText.textContent = str.histLabel;
+      if (histTitleText) histTitleText.textContent = str.histTitle;
+      if (histCloseText) histCloseText.textContent = str.histClose;
+      if (historyEmpty)  historyEmpty.innerHTML    = str.histEmpty.replace('\n', '<br/>');
+    }
+
+    // ── Translation ───────────────────────────────────────────────────────────────
+    async function translateText(text: string, targetLang: string): Promise<string> {
+      if (!text) return text;
+      const cacheKey = `${targetLang}:${text.slice(0, 120)}`;
+      if (translationCache.has(cacheKey)) return translationCache.get(cacheKey)!;
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, targetLang }),
+        });
+        if (res.ok) {
+          const { translated } = await res.json();
+          translationCache.set(cacheKey, translated);
+          return translated;
+        }
+      } catch {}
+      return text; // fallback: original
+    }
+
+    async function refreshDescriptions() {
+      if (!cardsEl || !currentRecs.length) return;
+      const descEls  = Array.from(cardsEl.querySelectorAll<HTMLElement>('[data-orig-desc]'));
+      const justEls  = Array.from(cardsEl.querySelectorAll<HTMLElement>('[data-orig-just]'));
+
+      const tasks = [
+        ...descEls.map(el => async () => {
+          const orig = el.getAttribute('data-orig-desc') || '';
+          if (lang === 'es') { el.textContent = orig; return; }
+          el.textContent = s().translating;
+          el.textContent = await translateText(orig, 'en');
+        }),
+        ...justEls.map(el => async () => {
+          const orig = el.getAttribute('data-orig-just') || '';
+          if (lang === 'es') { el.textContent = orig; return; }
+          el.textContent = s().translating;
+          el.textContent = await translateText(orig, 'en');
+        }),
+      ];
+
+      await Promise.all(tasks.map(t => t()));
+    }
+
+    // ── Carousel ──────────────────────────────────────────────────────────────────
+    // Positions: 0=center, 1=right-side, 2=left-side
+    const CAROUSEL_POS = [
+      { x: '0%',    scale: 1,    opacity: 1,    zIndex: 10 },
+      { x: '80%',   scale: 0.76, opacity: 0.35, zIndex: 5  },
+      { x: '-80%',  scale: 0.76, opacity: 0.35, zIndex: 5  },
+    ];
+
+    function getSlot(cardIdx: number): number {
+      if (cardIdx === activeIdx)                        return 0; // center
+      if (cardIdx === (activeIdx + 1) % cards.length)  return 1; // right
+      return 2;                                                    // left
+    }
+
+    function applyPositions(animated: boolean) {
+      cards.forEach((card, i) => {
+        const pos = CAROUSEL_POS[getSlot(i)];
+        if (animated) {
+          gsap.to(card, { ...pos, duration: 0.55, ease: 'power3.inOut', overwrite: true });
+        } else {
+          gsap.set(card, pos);
+        }
+      });
+      updateDots();
+      syncContainerHeight();
+    }
+
+    function syncContainerHeight() {
+      if (!cardsEl || !cards[activeIdx]) return;
+      requestAnimationFrame(() => {
+        const h = (cards[activeIdx] as HTMLElement).scrollHeight;
+        if (h > 10 && cardsEl) cardsEl.style.minHeight = h + 'px';
+      });
+    }
+
+    function updateDots() {
+      if (!dotsEl) return;
+      dotsEl.innerHTML = '';
+      cards.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'w-2 h-2 rounded-full transition-all duration-300 ' +
+          (i === activeIdx ? 'bg-cyber-purple scale-125' : 'bg-white/20 hover:bg-white/40');
+        dot.setAttribute('aria-label', `Card ${i + 1}`);
+        dot.addEventListener('click', () => goTo(i));
+        dotsEl.appendChild(dot);
+      });
+    }
+
+    function goTo(newIdx: number) {
+      if (newIdx === activeIdx || cards.length < 2) return;
+      clearAutoAdvance();
+      activeIdx = newIdx;
+      applyPositions(true);
+      setTimeout(syncContainerHeight, 600);
+      startAutoAdvance();
+    }
+
+    function startAutoAdvance() {
+      if (cards.length < 2) return;
+      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 5000);
+    }
+
+    function clearAutoAdvance() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    prevBtn?.addEventListener('click', () => goTo((activeIdx - 1 + cards.length) % cards.length));
+    nextBtn?.addEventListener('click', () => goTo((activeIdx + 1) % cards.length));
+
+    // ── Build card ─────────────────────────────────────────────────────────────────
+    function buildCard(rec: any, idx: number): HTMLElement {
+      const str = s();
+      const isPrimary = idx === 0;
+      const card = document.createElement('div');
+      card.className = 'rounded-2xl border backdrop-blur-md p-5 sm:p-6 absolute w-5/6 sm:w-4/5';
+      card.style.cssText = isPrimary
+        ? 'left:8.33%;top:0;border-color:rgba(176,38,255,0.5);background:rgba(176,38,255,0.06);box-shadow:0 0 50px rgba(176,38,255,0.15);'
+        : 'left:8.33%;top:0;border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);';
+
+      const imageHtml = rec.image
+        ? `<img src="${esc(rec.image)}" alt="${esc(rec.title)}"
+               class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded-xl flex-shrink-0 border border-white/10"
+               loading="lazy" />`
+        : '';
+
+      const metaParts: string[] = [];
+      if (rec.score)    metaParts.push(`<span>⭐ ${esc(rec.score)}</span>`);
+      if (rec.year)     metaParts.push(`<span>📅 ${esc(String(rec.year))}</span>`);
+      if (rec.episodes) metaParts.push(`<span>📺 ${esc(rec.episodes)} eps</span>`);
+      if (rec.runtime)  metaParts.push(`<span>⏱️ ${esc(rec.runtime)}</span>`);
+      const metaHtml = metaParts.length
+        ? `<div class="flex flex-wrap gap-3 text-xs text-gray-500">${metaParts.join('')}</div>` : '';
+
+      const genresHtml = (rec.genres || []).length
+        ? `<div class="flex flex-wrap gap-1.5">${(rec.genres as string[]).map((g: string) =>
+            `<span class="px-2 py-0.5 rounded-full text-xs border"
+                   style="background:rgba(176,38,255,0.1);color:rgba(176,38,255,0.8);border-color:rgba(176,38,255,0.2);"
+             >${esc(g)}</span>`).join('')}</div>` : '';
+
+      const trailerHref = 'https://www.youtube.com/results?search_query=' + encodeURIComponent((rec.title || '') + ' trailer');
+      const rankLabel = str.ranks[Math.min(idx, 2)];
+      const rankOpacity = isPrimary ? '0.9' : '0.4';
+
+      card.innerHTML = `
+        <div class="flex gap-4 sm:gap-5">
+          ${imageHtml}
+          <div class="flex-1 min-w-0 space-y-2.5">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xl font-sans font-black tabular-nums"
+                    style="color:rgba(176,38,255,${rankOpacity});">${String(idx + 1).padStart(2, '0')}</span>
+              <span class="text-xs font-mono uppercase tracking-wider text-white/30">${rankLabel}</span>
+            </div>
+            <h3 class="text-white font-sans font-bold leading-tight"
+                style="font-size:clamp(1rem,3vw,1.35rem);">${esc(rec.title || '—')}</h3>
+            ${metaHtml}
+            <p class="text-gray-300 text-sm leading-relaxed"
+               data-orig-desc="${esc(rec.description || '')}">${esc(rec.description || '')}</p>
+            ${genresHtml}
+            <a href="${trailerHref}" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border transition-all duration-200"
+               style="border-color:rgba(0,212,255,0.3);color:rgba(0,212,255,0.7);">${str.trailer}</a>
+          </div>
+        </div>
+        ${rec.justification ? `
+        <div class="mt-4 pt-4 border-t border-white/5">
+          <p class="text-gray-500 text-xs font-mono leading-relaxed">
+            <span style="color:rgba(176,38,255,0.6);">🤖</span>&nbsp;<span
+              data-orig-just="${esc(rec.justification)}">${esc(rec.justification)}</span>
+          </p>
+        </div>` : ''}
+      `;
+      return card;
+    }
+
+    // ── Show result ────────────────────────────────────────────────────────────────
+    function showResult(data: any, name: string, type: string) {
+      loading!.classList.add('hidden');
+      content!.classList.remove('hidden');
+      currentRecs = (data.recommendations || []).slice(0, 3);
+      _currentName = name;
+      _currentType = type;
+
+      updateStaticStrings();
+      const str = s();
+      if (headerEl) headerEl.textContent = str.header(name);
+
+      clearAutoAdvance();
+      activeIdx = 0;
+      cards = [];
+
+      if (cardsEl) {
+        cardsEl.innerHTML = '';
+        if (!currentRecs.length) {
+          cardsEl.innerHTML = `<div class="rounded-2xl border border-white/10 p-8 text-center text-gray-400 font-mono"
+                                    style="position:absolute;width:100%;">${str.noResults}</div>`;
+        } else {
+          currentRecs.forEach((rec, idx) => {
+            const card = buildCard(rec, idx);
+            cardsEl.appendChild(card);
+            cards.push(card);
+          });
+          applyPositions(false);
+          // Entrance animation for center card
+          gsap.from(cards[0], { y: 30, opacity: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+          setTimeout(syncContainerHeight, 200);
+          startAutoAdvance();
+          saveToHistory(currentRecs, name, type);
+        }
+      }
+      gsap.from(content, { opacity: 0, duration: 0.5 });
+      refreshDescriptions();
+    }
+
+    // ── History helpers ────────────────────────────────────────────────────────────
+    function saveToHistory(recs: any[], name: string, type: string) {
+      const hist: any[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      hist.unshift({
+        date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
+        name, type, recommendations: recs,
+      });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, 10)));
+    }
+
+    function renderHistoryPanel() {
+      if (!historyList || !historyEmpty) return;
+      const hist: any[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      historyList.innerHTML = '';
+      if (!hist.length) { historyEmpty.classList.remove('hidden'); return; }
+      historyEmpty.classList.add('hidden');
+      const str = s();
+
+      hist.forEach((entry: any, ei: number) => {
+        const typeLabel = entry.type === 'anime' ? str.typeAnime : str.typeMovies;
+        const wrap = document.createElement('div');
+        wrap.className = 'rounded-2xl border border-white/10 p-5 space-y-4';
+        wrap.style.cssText = 'background:rgba(255,255,255,0.02);';
+
+        const recsHtml = (entry.recommendations || []).slice(0, 3).map((rec: any, ri: number) => {
+          const trailerHref = 'https://www.youtube.com/results?search_query=' + encodeURIComponent((rec.title || '') + ' trailer');
+          const imgTag = rec.image
+            ? `<img src="${esc(rec.image)}" alt="${esc(rec.title)}" class="w-12 h-16 object-cover rounded-lg flex-shrink-0 border border-white/10" loading="lazy" />`
+            : '';
+          const genreSpans = (rec.genres || []).slice(0, 3).map((g: string) =>
+            `<span class="px-1.5 py-0.5 rounded text-xs" style="background:rgba(176,38,255,0.08);color:rgba(176,38,255,0.7);">${esc(g)}</span>`
+          ).join('');
+          return `<div class="flex gap-3 items-start p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+            ${imgTag}
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono font-bold text-xs" style="color:rgba(176,38,255,${ri===0?'0.9':'0.45'});">0${ri+1}</span>
+                <span class="text-white text-sm font-sans font-semibold truncate">${esc(rec.title||'—')}</span>
+              </div>
+              <p class="text-gray-500 text-xs leading-relaxed line-clamp-2">${esc(rec.description||'')}</p>
+              ${genreSpans ? `<div class="flex flex-wrap gap-1 mt-1.5">${genreSpans}</div>` : ''}
+              <a href="${trailerHref}" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1 mt-1.5 text-xs font-mono"
+                 style="color:rgba(0,212,255,0.6);">${str.trailer}</a>
+            </div></div>`;
+        }).join('');
+
+        wrap.innerHTML = `<div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="text-cyber-purple/50 font-mono text-xs">#${ei+1}</span>
+            <span class="text-white font-sans font-semibold">${esc(entry.name)}</span>
+            <span class="px-2 py-0.5 rounded-full text-xs" style="background:rgba(176,38,255,0.1);color:rgba(176,38,255,0.8);">${typeLabel}</span>
+          </div>
+          <span class="text-gray-600 text-xs font-mono">${esc(entry.date)}</span>
+        </div>
+        <div class="space-y-2">${recsHtml}</div>`;
+
+        historyList.appendChild(wrap);
+        gsap.from(wrap, { y: 20, opacity: 0, duration: 0.4, delay: 0.08 * ei, ease: 'power2.out' });
+      });
+    }
+
+    function openHistory() {
+      if (!historyPanel) return;
+      updateStaticStrings();
+      renderHistoryPanel();
+      historyPanel.classList.remove('scene-hidden');
+      historyPanel.classList.add('scene-visible');
+      gsap.fromTo(historyPanel, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+    }
+
+    function closeHistory() {
+      if (!historyPanel) return;
+      gsap.to(historyPanel, {
+        opacity: 0, duration: 0.3,
+        onComplete: () => {
+          historyPanel.classList.remove('scene-visible');
+          historyPanel.classList.add('scene-hidden');
+          gsap.set(historyPanel, { opacity: 1 });
+        },
+      });
+    }
+
+    // ── Fetch ──────────────────────────────────────────────────────────────────────
+    async function fetchRecommendation() {
+      const choice  = localStorage.getItem('pillChoice') || 'anime';
+      const answers = JSON.parse(localStorage.getItem('userAnswers') || '{}');
+      const name    = localStorage.getItem('userName') || 'Traveler';
+      const str     = s();
+
+      let msgIdx = 0;
+      const msgInterval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % str.loading.length;
+        if (loadingText) {
+          gsap.to(loadingText, {
+            opacity: 0, duration: 0.2,
+            onComplete: () => {
+              loadingText.textContent = str.loading[msgIdx];
+              gsap.to(loadingText, { opacity: 1, duration: 0.2 });
+            },
+          });
+        }
+      }, 2000);
+      if (loadingText) loadingText.textContent = str.loading[0];
+
+      try {
+        const res = await fetch('/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: choice, answers, userName: name }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        clearInterval(msgInterval);
+        showResult(data, name, choice);
+      } catch {
+        clearInterval(msgInterval);
+        showResult({ recommendations: [] }, name, choice);
+      }
+    }
+
+    // ── Wiring ─────────────────────────────────────────────────────────────────────
+    btnRetry?.addEventListener('click', () => {
+      clearAutoAdvance();
+      gsap.to(scene, {
+        opacity: 0, duration: 0.5,
+        onComplete: () => {
+          scene!.classList.add('scene-hidden');
+          scene!.classList.remove('scene-visible');
+          window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'result', to: 'pills' } }));
+        },
+      });
+    });
+
+    btnHistoryBtn?.addEventListener('click', openHistory);
+    btnCloseHist?.addEventListener('click', closeHistory);
+    window.addEventListener('history:open', openHistory);
+
+    // Language change — rebuild cards + re-translate
+    window.addEventListener('lang:change', (e: Event) => {
+      lang = ((e as CustomEvent).detail.lang || 'en') as Lang;
+      updateStaticStrings();
+      if (currentRecs.length > 0 && cardsEl) {
+        clearAutoAdvance();
+        cards = [];
+        cardsEl.innerHTML = '';
+        currentRecs.forEach((rec, idx) => {
+          const card = buildCard(rec, idx);
+          cardsEl.appendChild(card);
+          cards.push(card);
+        });
+        // Restore active card position
+        activeIdx = Math.min(activeIdx, cards.length - 1);
+        applyPositions(false);
+        startAutoAdvance();
+        refreshDescriptions();
+      }
+    });
+
+    window.addEventListener('scene:advance', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.to !== 'result') return;
+
+      loading!.classList.remove('hidden');
+      content!.classList.add('hidden');
+      clearAutoAdvance();
+      activeIdx = 0;
+      cards = [];
+      if (cardsEl) cardsEl.innerHTML = '';
+
+      scene.classList.remove('scene-hidden');
+      scene.classList.add('scene-visible');
+      gsap.set(scene, { opacity: 0 });
+      gsap.to(scene, { opacity: 1, duration: 0.5 });
+
+      fetchRecommendation();
+    });
+  }
+
+  document.addEventListener('astro:page-load', initResult);
+  initResult();
+</script>

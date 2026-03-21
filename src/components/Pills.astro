@@ -1,0 +1,236 @@
+---
+/** Pills - Escena Matrix con elección roja/azul */
+---
+
+<div id="pills-scene" class="scene scene-hidden" style="overflow-y:auto;">
+  <!-- Matrix rain canvas — behind everything -->
+  <canvas id="matrix-canvas" class="absolute inset-0 pointer-events-none" style="z-index:0;opacity:0;width:100%;height:100%;"></canvas>
+  <div class="relative z-10 flex flex-col items-center gap-12 px-4 py-8">
+    <!-- Greeting -->
+    <div class="text-center space-y-3">
+      <p id="pills-greeting" class="text-gray-400 text-lg font-mono"></p>
+      <h2 class="text-2xl sm:text-3xl font-sans font-bold text-white">
+        Es hora de elegir tu camino
+      </h2>
+      <p class="text-gray-500 text-sm max-w-md">
+        Una vez elijas, no hay vuelta atrás...
+      </p>
+    </div>
+
+    <!-- Hands + Pills -->
+    <div class="flex flex-col sm:flex-row items-center gap-8 sm:gap-16">
+      <!-- Red Pill - Anime -->
+      <button id="pill-red" class="pill-choice group relative" data-choice="anime" aria-label="Elegir Anime">
+        <div class="relative z-10 flex flex-col items-center gap-4">
+          <!-- Hand -->
+          <div class="text-6xl sm:text-7xl group-hover:scale-110" style="transition: transform 0.3s ease;">
+            🤚
+          </div>
+          <!-- Pill -->
+          <div class="pill-capsule w-20 h-10 sm:w-24 sm:h-12 rounded-full 
+                      bg-gradient-to-r from-red-600 to-red-400
+                      shadow-lg shadow-red-500/40
+                      transition-all duration-500
+                      group-hover:shadow-red-500/80 group-hover:shadow-2xl
+                      group-hover:scale-110
+                      flex items-center justify-center">
+            <div class="w-0.5 h-full bg-red-300/30"></div>
+          </div>
+          <!-- Label -->
+          <div class="text-center">
+            <p class="text-red-400 font-sans font-bold text-lg tracking-wide group-hover:glow-text transition-all">
+              ANIME
+            </p>
+            <p class="text-gray-500 text-xs mt-1">Píldora Roja</p>
+          </div>
+        </div>
+        <!-- Glow bg -->
+        <div class="absolute inset-0 bg-red-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+      </button>
+
+      <!-- Divider -->
+      <div class="hidden sm:flex flex-col items-center gap-2 text-gray-600">
+        <div class="w-px h-16 bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+        <span class="text-xs font-mono">ó</span>
+        <div class="w-px h-16 bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+      </div>
+
+      <!-- Blue Pill - Movies -->
+      <button id="pill-blue" class="pill-choice group relative" data-choice="movie" aria-label="Elegir Películas">
+        <div class="relative z-10 flex flex-col items-center gap-4">
+          <!-- Hand -->
+          <div class="text-6xl sm:text-7xl group-hover:scale-110" style="transition: transform 0.3s ease;">
+            🤚
+          </div>
+          <!-- Pill -->
+          <div class="pill-capsule w-20 h-10 sm:w-24 sm:h-12 rounded-full 
+                      bg-gradient-to-r from-blue-600 to-cyan-400
+                      shadow-lg shadow-blue-500/40
+                      transition-all duration-500
+                      group-hover:shadow-blue-500/80 group-hover:shadow-2xl
+                      group-hover:scale-110
+                      flex items-center justify-center">
+            <div class="w-0.5 h-full bg-blue-300/30"></div>
+          </div>
+          <!-- Label -->
+          <div class="text-center">
+            <p class="text-blue-400 font-sans font-bold text-lg tracking-wide group-hover:glow-text transition-all">
+              PELÍCULAS
+            </p>
+            <p class="text-gray-500 text-xs mt-1">Píldora Azul</p>
+          </div>
+        </div>
+        <!-- Glow bg -->
+        <div class="absolute inset-0 bg-blue-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-xl"></div>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initPills() {
+    const scene = document.getElementById('pills-scene');
+    const greeting = document.getElementById('pills-greeting');
+    const pillRed = document.getElementById('pill-red');
+    const pillBlue = document.getElementById('pill-blue');
+    const canvas = document.getElementById('matrix-canvas') as HTMLCanvasElement | null;
+    if (!scene || !greeting || !pillRed || !pillBlue || !canvas) return;
+
+    let chosen = false;
+
+    // Matrix rain
+    let stopRain: (() => void) | undefined;
+    function startMatrixRain() {
+      const ctx = canvas!.getContext('2d');
+      if (!ctx) return;
+      canvas!.width  = window.innerWidth;
+      canvas!.height = window.innerHeight;
+      const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+      const fontSize = 14;
+      const columns = Math.floor(canvas!.width / fontSize);
+      const drops: number[] = new Array(columns).fill(1);
+      function draw() {
+        ctx!.fillStyle = 'rgba(10,10,15,0.05)';
+        ctx!.fillRect(0, 0, canvas!.width, canvas!.height);
+        ctx!.fillStyle = '#b026ff33';
+        ctx!.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+          const ch = chars[Math.floor(Math.random() * chars.length)];
+          ctx!.fillText(ch, i * fontSize, drops[i] * fontSize);
+          if (drops[i] * fontSize > canvas!.height && Math.random() > 0.975) drops[i] = 0;
+          drops[i]++;
+        }
+      }
+      const iv = setInterval(draw, 50);
+      return () => { clearInterval(iv); ctx.clearRect(0, 0, canvas!.width, canvas!.height); };
+    }
+
+    window.addEventListener('scene:advance', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.to !== 'pills') return;
+
+      chosen = false;
+
+      const h2El = scene.querySelector('h2');
+      gsap.set(scene, { opacity: 1 });
+
+      // Reset canvas opacity before animating
+      canvas!.style.opacity = '0';
+      if (stopRain) { stopRain(); stopRain = undefined; }
+
+      scene.classList.remove('scene-hidden');
+      scene.classList.add('scene-visible');
+
+      // Set greeting with name
+      const name = localStorage.getItem('userName') || 'Viajero';
+      greeting!.textContent = `Bien, ${name}...`;
+
+      // Start matrix rain
+      stopRain = startMatrixRain();
+      gsap.to(canvas, { opacity: 1, duration: 1.5 });
+
+      // Set initial positions immediately (avoids frame-flash before fromTo kicks in)
+      gsap.set(h2El,     { y: 20, opacity: 0 });
+      gsap.set(greeting, { y: 20, opacity: 0 });
+      gsap.set(pillRed,  { x: -80, opacity: 0 });
+      gsap.set(pillBlue, { x:  80, opacity: 0 });
+
+      // Animate to final positions
+      const tl = gsap.timeline({ delay: 0.5 });
+      tl.to(h2El,     { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' });
+      tl.to(greeting, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, '-=0.3');
+      tl.to(pillRed,  { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.1');
+      tl.to(pillBlue, { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+
+
+    });
+
+    // Pill choice handler
+    function choosePill(choice: string) {
+      if (chosen) return;
+      chosen = true;
+
+      // Pantalla completa para mayor inmersión
+      document.documentElement.requestFullscreen().catch(() => {});
+
+      localStorage.setItem('pillChoice', choice);
+
+      const selected = choice === 'anime' ? pillRed : pillBlue;
+      const other = choice === 'anime' ? pillBlue : pillRed;
+      const color = choice === 'anime' ? '#ff2d55' : '#00d4ff';
+
+      const tl = gsap.timeline();
+
+      // Highlight chosen, fade other
+      tl.to(other, { opacity: 0, scale: 0.8, duration: 0.5 });
+      tl.to(selected, { scale: 1.2, duration: 0.4 }, '-=0.3');
+
+      // Flash effect
+      tl.to(document.body, {
+        backgroundColor: color,
+        duration: 0.15,
+        yoyo: true,
+        repeat: 3,
+      });
+      tl.to(document.body, { backgroundColor: '', duration: 0.3 });
+
+      // Fade out scene
+      tl.to(scene, {
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power2.in',
+        onComplete: () => {
+          scene!.classList.add('scene-hidden');
+          scene!.classList.remove('scene-visible');
+          gsap.set(canvas, { opacity: 0 });
+          if (stopRain) { stopRain(); stopRain = undefined; }
+          window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'pills', to: 'questions' } }));
+        },
+      }, '+=0.2');
+    }
+
+    pillRed.addEventListener('click', () => choosePill('anime'));
+    pillBlue.addEventListener('click', () => choosePill('movie'));
+  }
+
+  document.addEventListener('astro:page-load', initPills);
+  initPills();
+</script>
+
+<style>
+  .pill-choice {
+    @apply p-8 rounded-3xl cursor-pointer;
+    background: transparent;
+    border: none;
+  }
+  .pill-choice:hover .pill-capsule {
+    animation: pill-glow 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes pill-glow {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.3); }
+  }
+</style>

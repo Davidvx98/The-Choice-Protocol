@@ -1,0 +1,184 @@
+---
+// Letter.astro — Escena de bienvenida: muestra el nombre del usuario de forma prominente
+---
+
+<div id="message-scene" class="scene scene-hidden" style="overflow-y: auto; align-items: flex-start;">
+  <div class="relative flex flex-col items-center justify-center px-4 py-16 w-full min-h-full">
+
+    <!-- Purple glow blob -->
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyber-purple/8 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Particles -->
+    <div id="msg-particles" class="fixed inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <div class="relative z-10 text-center space-y-10 max-w-xl w-full">
+
+      <!-- Label -->
+      <p id="msg-label" class="text-cyber-purple/60 text-xs font-mono tracking-widest uppercase" style="opacity: 0;">
+        Tu destino te espera
+      </p>
+
+      <!-- Name - huge glowing -->
+      <div id="msg-name-wrap" style="opacity: 0; transform: translateY(40px);">
+        <h1 id="msg-name"
+            class="font-sans font-black text-white leading-none tracking-tight break-all"
+            style="font-size: clamp(3rem, 12vw, 5.5rem); text-shadow: 0 0 40px rgba(176,38,255,0.9), 0 0 80px rgba(176,38,255,0.5), 0 0 120px rgba(176,38,255,0.25);">
+        </h1>
+      </div>
+
+      <!-- Divider line -->
+      <div id="msg-divider"
+           class="h-px bg-gradient-to-r from-transparent via-cyber-purple to-transparent mx-auto"
+           style="opacity: 0; width: 0;"></div>
+
+      <!-- Typed message -->
+      <div id="msg-text-wrap" style="opacity: 0; min-height: 56px;">
+        <p id="msg-text" class="text-gray-400 text-base sm:text-lg font-mono leading-relaxed"></p>
+      </div>
+
+      <!-- CTA button -->
+      <div id="msg-btn-wrap" style="opacity: 0;">
+        <button id="msg-continue-btn"
+                class="btn-cyber text-cyber-purple py-4"
+                style="padding-left: 3rem; padding-right: 3rem;">
+          Comenzar la aventura &nbsp;->
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from 'gsap';
+
+  function initMessage() {
+    const scene     = document.getElementById('message-scene');
+    const nameEl    = document.getElementById('msg-name');
+    const nameWrap  = document.getElementById('msg-name-wrap');
+    const label     = document.getElementById('msg-label');
+    const textEl    = document.getElementById('msg-text');
+    const textWrap  = document.getElementById('msg-text-wrap');
+    const divider   = document.getElementById('msg-divider');
+    const btnWrap   = document.getElementById('msg-btn-wrap');
+    const btn       = document.getElementById('msg-continue-btn');
+    const particles = document.getElementById('msg-particles');
+
+    if (!scene || !nameEl || !nameWrap || !textEl || !btn || !btnWrap) return;
+
+    function spawnParticles() {
+      if (!particles) return;
+      particles.innerHTML = '';
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = `${Math.random() * 100}%`;
+        p.style.top  = `${Math.random() * 100}%`;
+        particles.appendChild(p);
+        gsap.fromTo(p, { opacity: 0.8 }, {
+          y: -(window.innerHeight + 60),
+          x: (Math.random() - 0.5) * 200,
+          opacity: 0,
+          duration: 4 + Math.random() * 5,
+          repeat: -1,
+          delay: Math.random() * 4,
+          ease: 'none',
+        });
+      }
+    }
+
+    function typeText(text: string, speed = 50): Promise<void> {
+      return new Promise(resolve => {
+        let i = 0;
+        const iv = setInterval(() => {
+          if (i < text.length) {
+            textEl!.innerHTML += text[i] === '\n' ? '<br>' : text[i];
+            i++;
+          } else {
+            clearInterval(iv);
+            resolve();
+          }
+        }, speed);
+      });
+    }
+
+    let introAudio: HTMLAudioElement | null = null;
+
+    function playIntroAudio() {
+      introAudio = new Audio('/media/lectura_intro_aventura.mp3');
+      introAudio.play().catch(() => {});
+    }
+
+    function stopIntroAudio() {
+      if (introAudio) {
+        introAudio.pause();
+        introAudio.currentTime = 0;
+        introAudio = null;
+      }
+    }
+
+    window.addEventListener('scene:advance', async (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.to !== 'message') return;
+
+      const returning = !!localStorage.getItem('introDone');
+      const name = localStorage.getItem('userName') || 'Viajero';
+      nameEl!.textContent = name;
+      textEl!.innerHTML = '';
+
+      gsap.set(scene,    { opacity: 0 });
+      gsap.set(label,    { opacity: 0 });
+      gsap.set(nameWrap, { opacity: 0, y: 40 });
+      gsap.set(divider,  { opacity: 0, width: 0 });
+      gsap.set(textWrap, { opacity: 0 });
+      gsap.set(btnWrap,  { opacity: 0 });
+
+      scene.classList.remove('scene-hidden');
+      scene.classList.add('scene-visible');
+
+      spawnParticles();
+
+      const speed = returning ? 0.3 : 1; // factor de duración GSAP
+      const tl = gsap.timeline();
+      tl.to(scene,    { opacity: 1,                              duration: 0.5  * speed });
+      tl.to(label,    { opacity: 1,                              duration: 0.5  * speed }, '-=0.2');
+      tl.to(nameWrap, { opacity: 1, y: 0, ease: 'power3.out',   duration: 0.9  * speed }, `+=${0.1 * speed}`);
+      tl.to(divider,  { opacity: 1, width: '6rem', ease: 'power2.out', duration: 0.6 * speed }, `-=${0.4 * speed}`);
+      tl.to(textWrap, { opacity: 1,                              duration: 0.4  * speed }, `-=${0.1 * speed}`);
+      tl.call(() => { playIntroAudio(); });
+      tl.call(() => {
+        void (async () => {
+          const MSG = 'Hemos estado esperandote...\nTu proxima aventura esta a punto de comenzar.';
+          if (returning) {
+            textEl!.innerHTML = MSG.replace(/\n/g, '<br>');
+            gsap.to(btnWrap, { opacity: 1, duration: 0.3 });
+          } else {
+            await typeText(MSG);
+            gsap.to(btnWrap, { opacity: 1, duration: 0.5, delay: 0.3 });
+          }
+        })();
+      });
+    });
+
+    btn.addEventListener('click', () => {
+      stopIntroAudio();
+      if (particles) particles.innerHTML = '';
+      textEl!.innerHTML = '';
+
+      gsap.to(scene, {
+        opacity: 0, scale: 0.97, duration: 0.6, ease: 'power2.in',
+        onComplete: () => {
+          scene!.classList.add('scene-hidden');
+          scene!.classList.remove('scene-visible');
+          gsap.set(scene, { scale: 1 });
+          window.dispatchEvent(new CustomEvent('scene:advance', {
+            detail: { from: 'message', to: 'pills' },
+          }));
+        },
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initMessage);
+  initMessage();
+</script>

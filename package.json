@@ -1,0 +1,30 @@
+{
+  "name": "the-choice-protocol",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "El Protocolo de Elección: Una experiencia interactiva impulsada por IA",
+  "homepage": "https://github.com/Davidvx98/The-Choice-Protocol",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Davidvx98/The-Choice-Protocol.git"
+  },
+  "author": "Davidvx98",
+  "license": "MIT",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@astrojs/node": "^10.0.3",
+    "@google/generative-ai": "^0.21.0",
+    "astro": "^6.0.8",
+    "gsap": "^3.12.5"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.9.3"
+  }
+}
