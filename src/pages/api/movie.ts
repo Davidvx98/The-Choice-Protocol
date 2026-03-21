@@ -9,18 +9,20 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const genresParam = url.searchParams.get('genres');
     const genres = genresParam ? genresParam.split(',').map(Number).filter(n => !isNaN(n)) : [];
-    const minScore = parseFloat(url.searchParams.get('min_score') || '6');
+    const minScoreRaw = parseFloat(url.searchParams.get('min_score') || '6');
+    const minScore = Math.max(0, Math.min(10, isNaN(minScoreRaw) ? 6 : minScoreRaw));
     const limit = parseInt(url.searchParams.get('limit') || '10');
 
     const yearFrom = url.searchParams.get('year_from');
     const yearTo = url.searchParams.get('year_to');
+    const currentYear = new Date().getFullYear();
     const yearRange = yearFrom && yearTo
-      ? [parseInt(yearFrom), parseInt(yearTo)] as [number, number]
+      ? [Math.max(1900, Math.min(currentYear, parseInt(yearFrom))), Math.max(1900, Math.min(currentYear + 5, parseInt(yearTo)))] as [number, number]
       : undefined;
 
     const results = await searchMovies({
       genres,
-      minScore: isNaN(minScore) ? 6 : minScore,
+      minScore,
       yearRange,
       limit: Math.min(Math.max(limit, 1), 25),
     });

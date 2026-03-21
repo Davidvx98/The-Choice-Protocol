@@ -12,8 +12,15 @@ export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
     const { text, targetLang } = body as { text: string; targetLang: string };
 
-    if (!text || !targetLang) {
+    if (!text || typeof text !== 'string' || !targetLang) {
       return new Response(JSON.stringify({ error: 'Missing text or targetLang' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (text.length > 5000) {
+      return new Response(JSON.stringify({ error: 'Text too long' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });

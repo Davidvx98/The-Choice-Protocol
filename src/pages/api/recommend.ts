@@ -9,6 +9,16 @@ import { searchAnime, searchMovies } from '../../lib/apis';
 import { askGeminiSafe } from '../../lib/gemini';
 import type { UserAnswers } from '../../lib/recommendation';
 
+// Sanitise user name: keep only letters, numbers, spaces, max 30 chars
+function sanitizeName(raw: unknown): string {
+  if (typeof raw !== 'string') return 'Viajero';
+  return raw.replace(/[^a-zA-ZÀ-ÿ0-9 ]/g, '').trim().slice(0, 30) || 'Viajero';
+}
+
+function clampStr(val: unknown, max: number): string {
+  return typeof val === 'string' ? val.slice(0, max) : '';
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
@@ -18,12 +28,21 @@ export const POST: APIRoute = async ({ request }) => {
       userName: string;
     };
 
-    if (!type || !answers) {
-      return new Response(JSON.stringify({ error: 'Missing type or answers' }), {
+    if (type !== 'anime' && type !== 'movie') {
+      return new Response(JSON.stringify({ error: 'Invalid type' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    if (!answers || typeof answers !== 'object') {
+      return new Response(JSON.stringify({ error: 'Missing answers' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const safeName = sanitizeName(userName);
 
     // 1. Mapear respuestas a tags
     const tags = mapAnswersToTags(type, answers);
@@ -51,7 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 3. Intentar Gemini para personalización
-    const prompt = buildGeminiPrompt(type, answers, userName || 'Viajero', apiResults);
+    const prompt = buildGeminiPrompt(type, answers, safeName, apiResults);
     const geminiResponse = await askGeminiSafe(prompt);
 
     let result: any;
@@ -74,9 +93,9 @@ export const POST: APIRoute = async ({ request }) => {
             (item.title || '').toLowerCase().includes(r.title.toLowerCase())
           );
           return {
-            title: item.title,
-            description: item.description,
-            justification: item.justification,
+            title: clampStr(item.title, 200),
+            description: clampStr(item.description, 1000),
+            justification: clampStr(item.justification, 1000),
             image: match?.image || '',
             score: match?.score,
             year: match?.year,
@@ -89,11 +108,11 @@ export const POST: APIRoute = async ({ request }) => {
         result = { recommendations };
       } catch (parseErr) {
         console.error('[Gemini] Parse error, using fallback');
-        result = buildFallbackResult(apiResults, tags, userName);
+        result = buildFallbackResult(apiResults, tags, safeName);
       }
     } else {
       // Fallback sin IA
-      result = buildFallbackResult(apiResults, tags, userName);
+      result = buildFallbackResult(apiResults, tags, safeName);
     }
 
     return new Response(JSON.stringify(result), {
