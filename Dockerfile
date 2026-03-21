@@ -26,14 +26,14 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 
 ENV HOST=0.0.0.0
-ENV PORT=4321
+ENV PORT=3000
 ENV NODE_ENV=production
 
-EXPOSE 4321
+EXPOSE 3000
 
-# Coolify uses this to know the container is healthy and ready
+# Coolify/Traefik uses this to know the container is healthy and ready
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget -qO- http://localhost:4321/ > /dev/null || exit 1
+  CMD wget -qO- http://localhost:3000/ > /dev/null || exit 1
 
 USER appuser
 
