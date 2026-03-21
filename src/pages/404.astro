@@ -1,0 +1,26 @@
+---
+/**
+ * Custom 404 page — SEO-friendly error page with navigation
+ */
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Página no encontrada — Las Píldoras"
+  description="La página que buscas no existe. Vuelve al inicio y descubre recomendaciones de anime y películas con inteligencia artificial."
+>
+  <main class="min-h-screen flex items-center justify-center px-4 bg-cyber-dark">
+    <div class="text-center max-w-lg space-y-6">
+      <p class="text-6xl sm:text-8xl font-sans font-black text-cyber-purple/30">404</p>
+      <h1 class="text-2xl sm:text-3xl font-sans font-bold text-white">Página no encontrada</h1>
+      <p class="text-gray-400 text-sm leading-relaxed">
+        Parece que esta dimensión no existe... pero hay muchas otras por explorar.
+      </p>
+      <nav class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/" class="btn-cyber text-cyber-purple">💊 Volver al inicio</a>
+        <a href="/recomendaciones/anime" class="btn-cyber text-red-400">🔴 Ver anime</a>
+        <a href="/recomendaciones/peliculas" class="btn-cyber text-cyan-400">🔵 Ver películas</a>
+      </nav>
+    </div>
+  </main>
+</Layout>

@@ -7,12 +7,33 @@
 @layer base {
   html {
     background: #000;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-cyber-dark text-white font-mono antialiased overflow-x-hidden;
     background-image: 
       radial-gradient(ellipse at 20% 50%, rgba(176, 38, 255, 0.05) 0%, transparent 50%),
       radial-gradient(ellipse at 80% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+    /* Prevent CLS from font loading */
+    font-display: swap;
+    text-rendering: optimizeSpeed;
+  }
+  /* Prevent CLS: Reserve space for images */
+  img {
+    height: auto;
+    max-width: 100%;
+  }
+  /* Improve INP: optimize touch response */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 

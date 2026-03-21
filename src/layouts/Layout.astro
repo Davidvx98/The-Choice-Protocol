@@ -6,15 +6,18 @@ interface Props {
   description?: string;
   ogImage?: string;
   canonicalPath?: string;
+  breadcrumbs?: { name: string; path: string }[];
 }
 
 const SITE_URL = import.meta.env.SITE ?? 'https://the-choice-protocol.com';
+const generator = Astro.generator;
 
 const {
   title = 'Las Píldoras — Recomendador de Anime y Películas con IA | ¿Qué ver hoy?',
   description = 'Descubre qué anime o película ver hoy con inteligencia artificial. Recomendaciones personalizadas de anime, películas y series basadas en tu estado de ánimo y preferencias.',
-  ogImage = `${SITE_URL}/media/og-cover.png`,
+  ogImage = `${SITE_URL}/media/og-cover.svg`,
   canonicalPath = '',
+  breadcrumbs = [],
 } = Astro.props;
 
 const canonicalURL = new URL(canonicalPath, SITE_URL).href;
@@ -28,10 +31,13 @@ const canonicalURL = new URL(canonicalPath, SITE_URL).href;
     <!-- SEO básico -->
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="recomendaciones anime, qué anime ver, películas recomendadas, qué ver hoy, recomendador con IA, anime online, mejores animes, películas para ver, series recomendadas, anime recommendations, what to watch today" />
+    <meta name="keywords" content="recomendaciones anime, qué anime ver, películas recomendadas, qué ver hoy, recomendador con IA, anime online, mejores animes, películas para ver, series recomendadas, anime recommendations, what to watch today, recomendador de películas, qué película ver, mejores películas, best anime to watch" />
     <meta name="author" content="The Choice Protocol" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#0a0a0f" />
+    <meta name="generator" content={generator} />
+    <meta name="rating" content="general" />
+    <meta name="revisit-after" content="3 days" />
 
     <!-- Canonical -->
     <link rel="canonical" href={canonicalURL} />
@@ -69,6 +75,7 @@ const canonicalURL = new URL(canonicalPath, SITE_URL).href;
     <link rel="dns-prefetch" href="https://www.youtube.com" />
     <link rel="dns-prefetch" href="https://api.jikan.moe" />
     <link rel="dns-prefetch" href="https://image.tmdb.org" />
+    <link rel="dns-prefetch" href="https://cdn.myanimelist.net" />
 
     <!-- Schema.org JSON-LD: WebApplication -->
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
@@ -124,6 +131,19 @@ const canonicalURL = new URL(canonicalPath, SITE_URL).href;
         }
       ]
     })} />
+
+    {breadcrumbs.length > 0 && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": breadcrumbs.map((crumb, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "name": crumb.name,
+          "item": new URL(crumb.path, SITE_URL).href
+        }))
+      })} />
+    )}
   </head>
   <body class="min-h-screen relative bg-black">
     <noscript>

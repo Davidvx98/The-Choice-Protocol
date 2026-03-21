@@ -1,0 +1,125 @@
+---
+/**
+ * SEO Landing Page — Recomendaciones de Películas con IA
+ * Targets: "películas recomendadas", "qué película ver", "qué ver hoy", "recomendador de películas"
+ */
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Recomendaciones de Películas con IA — Descubre qué película ver hoy | Las Píldoras"
+  description="Encuentra la película perfecta para ver hoy con inteligencia artificial. Recomendaciones personalizadas basadas en tu estado de ánimo y gustos. Acción, drama, comedia, terror, ciencia ficción y más."
+  canonicalPath="/recomendaciones/peliculas"
+  breadcrumbs={[
+    { name: 'Inicio', path: '/' },
+    { name: 'Recomendaciones', path: '/recomendaciones/peliculas' },
+    { name: 'Películas', path: '/recomendaciones/peliculas' },
+  ]}
+>
+  <main class="min-h-screen bg-cyber-dark text-white">
+    <!-- Hero -->
+    <section class="relative px-4 py-16 sm:py-24 max-w-4xl mx-auto text-center">
+      <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse at 50% 30%, rgba(0,212,255,0.08) 0%, transparent 60%);"></div>
+      <div class="relative z-10 space-y-6">
+        <p class="text-cyan-400 text-xs font-mono tracking-widest uppercase">🔵 Píldora Azul</p>
+        <h1 class="text-3xl sm:text-5xl font-sans font-bold leading-tight">
+          Recomendaciones de <span class="text-cyan-400">Películas</span> con Inteligencia Artificial
+        </h1>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          ¿No sabes qué película ver hoy? Nuestro recomendador con IA analiza tus gustos y estado de ánimo para sugerirte las películas perfectas para ti.
+        </p>
+        <a href="/" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-sans font-semibold text-sm uppercase tracking-widest text-cyan-400 border border-cyan-400/30 hover:bg-cyan-400/10 transition-all duration-300">
+          🎬 Obtener mis recomendaciones
+        </a>
+      </div>
+    </section>
+
+    <!-- Cómo funciona -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-8 text-center">¿Cómo funciona el recomendador de películas?</h2>
+      <div class="grid sm:grid-cols-3 gap-6">
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">💊</span>
+          <h3 class="text-white font-sans font-semibold">1. Elige la Píldora Azul</h3>
+          <p class="text-gray-400 text-sm">Selecciona el camino de las películas en nuestra experiencia interactiva.</p>
+        </div>
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">🎯</span>
+          <h3 class="text-white font-sans font-semibold">2. Cuéntanos tus gustos</h3>
+          <p class="text-gray-400 text-sm">Tu estado de ánimo, géneros favoritos, duración preferida y tipo de experiencia.</p>
+        </div>
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">🤖</span>
+          <h3 class="text-white font-sans font-semibold">3. Tu noche de cine perfecta</h3>
+          <p class="text-gray-400 text-sm">Recibe 3 películas seleccionadas por IA con justificación de por qué te gustarán.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Géneros -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-6 text-center">Géneros de películas disponibles</h2>
+      <div class="flex flex-wrap justify-center gap-3">
+        {['Acción / Aventura', 'Drama / Romance', 'Terror / Suspense', 'Comedia', 'Ciencia Ficción', 'Thriller / Crimen', 'Animación', 'Documental', 'Fantasía', 'Musical', 'Bélica', 'Western'].map((genre) => (
+          <span class="px-4 py-2 rounded-full text-sm border border-cyan-400/20 text-cyan-300/80 bg-cyan-400/5">
+            {genre}
+          </span>
+        ))}
+      </div>
+    </section>
+
+    <!-- Preguntas frecuentes -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-8 text-center">Preguntas frecuentes sobre recomendaciones de películas</h2>
+      <div class="space-y-4">
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Qué película ver si no sé qué elegir?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Nuestro recomendador está diseñado exactamente para eso. Elige "Sin filtro, sorpréndeme" como estado de ánimo y la IA te sugerirá películas variadas y sorprendentes basadas en tendencias y valoraciones.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Puedo elegir la duración de la película?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Sí. Puedes filtrar por cortitas (menos de 90 min), estándar (90-120 min), largas (2-2.5h) o épicas (más de 2.5h). Perfecto para ajustar a tu tiempo disponible.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Qué película ver en pareja?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Selecciona "Quiero algo romántico" como estado de ánimo y elige el género Romance/Drama. La IA te sugerirá películas perfectas para una noche en pareja, desde clásicos hasta estrenos recientes.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿De dónde saca las películas el recomendador?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Usamos la base de datos de TMDB (The Movie Database) con miles de películas, combinada con Google Gemini para generar recomendaciones inteligentes y personalizadas.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CTA final -->
+    <section class="px-4 py-16 max-w-4xl mx-auto text-center">
+      <h2 class="text-2xl font-sans font-bold text-white mb-4">¿Listo para tu noche de cine perfecta?</h2>
+      <p class="text-gray-400 mb-8">Es gratis, rápido y personalizado con inteligencia artificial.</p>
+      <a href="/" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-sans font-semibold text-sm uppercase tracking-widest text-cyan-400 border border-cyan-400/30 hover:bg-cyan-400/10 transition-all duration-300">
+        💊 Empezar ahora
+      </a>
+    </section>
+
+    <!-- Footer SEO -->
+    <footer class="px-4 py-8 border-t border-white/5 max-w-4xl mx-auto">
+      <nav class="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+        <a href="/" class="hover:text-cyber-purple transition-colors">Inicio</a>
+        <a href="/recomendaciones/anime" class="hover:text-red-400 transition-colors">Anime</a>
+        <a href="/recomendaciones/peliculas" class="text-cyan-400">Películas</a>
+      </nav>
+      <p class="text-center text-gray-600 text-xs mt-4">&copy; 2025 Las Píldoras — The Choice Protocol. Recomendador de anime y películas con IA.</p>
+    </footer>
+  </main>
+</Layout>

@@ -20,7 +20,7 @@ import Result from '../components/Result.astro';
     </header>
 
     <!-- SEO: Contenido indexable oculto visualmente pero accesible para bots -->
-    <article class="sr-only" aria-hidden="true">
+    <article class="sr-only">
       <h2>¿Qué anime ver hoy? Recomendaciones personalizadas con IA</h2>
       <p>Las Píldoras es un recomendador interactivo que usa Google Gemini para sugerirte anime y películas según tu estado de ánimo. Funciona como una experiencia narrativa: abres un sobre misterioso, eliges entre la Píldora Roja (anime) o la Píldora Azul (películas), respondes preguntas sobre tus gustos y recibes 3 recomendaciones perfectas.</p>
       <h3>Tipos de recomendaciones</h3>
@@ -125,6 +125,25 @@ import Result from '../components/Result.astro';
     </div>
 
   </main>
+
+  <!-- SEO Footer: Internal linking + structured navigation -->
+  <footer class="sr-only">
+    <nav aria-label="Navegación principal">
+      <h2>Explorar Las Píldoras</h2>
+      <ul>
+        <li><a href="/">Inicio — Recomendador de Anime y Películas</a></li>
+        <li><a href="/recomendaciones/anime">Recomendaciones de Anime con IA</a></li>
+        <li><a href="/recomendaciones/peliculas">Recomendaciones de Películas con IA</a></li>
+      </ul>
+    </nav>
+    <div>
+      <h2>Sobre Las Píldoras</h2>
+      <p>Las Píldoras (The Choice Protocol) es un recomendador gratuito de anime y películas impulsado por inteligencia artificial. Utiliza Google Gemini para analizar tus preferencias y estado de ánimo, generando recomendaciones personalizadas de entre miles de títulos.</p>
+      <p>Géneros de anime disponibles: Acción, Romance, Misterio, Comedia, Ciencia Ficción, Fantasía, Terror, Deportes, Slice of Life, Isekai, Mecha, Psicológico.</p>
+      <p>Géneros de películas disponibles: Acción, Aventura, Drama, Romance, Terror, Suspense, Comedia, Ciencia Ficción, Thriller, Crimen, Animación, Documental.</p>
+      <p>&copy; 2025 Las Píldoras — The Choice Protocol. Proyecto open source.</p>
+    </div>
+  </footer>
 </Layout>
 
 <script>

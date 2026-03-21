@@ -1,0 +1,125 @@
+---
+/**
+ * SEO Landing Page — Recomendaciones de Anime con IA
+ * Targets: "recomendaciones anime", "qué anime ver", "mejores animes", "anime recomendados"
+ */
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Recomendaciones de Anime con IA — Descubre tu próximo anime favorito | Las Píldoras"
+  description="Obtén recomendaciones personalizadas de anime con inteligencia artificial. Encuentra tu próximo anime favorito basado en tu estado de ánimo, géneros preferidos y estilo. Acción, romance, misterio, comedia y más."
+  canonicalPath="/recomendaciones/anime"
+  breadcrumbs={[
+    { name: 'Inicio', path: '/' },
+    { name: 'Recomendaciones', path: '/recomendaciones/anime' },
+    { name: 'Anime', path: '/recomendaciones/anime' },
+  ]}
+>
+  <main class="min-h-screen bg-cyber-dark text-white">
+    <!-- Hero -->
+    <section class="relative px-4 py-16 sm:py-24 max-w-4xl mx-auto text-center">
+      <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse at 50% 30%, rgba(255,45,85,0.08) 0%, transparent 60%);"></div>
+      <div class="relative z-10 space-y-6">
+        <p class="text-red-400 text-xs font-mono tracking-widest uppercase">🔴 Píldora Roja</p>
+        <h1 class="text-3xl sm:text-5xl font-sans font-bold leading-tight">
+          Recomendaciones de <span class="text-red-400">Anime</span> con Inteligencia Artificial
+        </h1>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          Descubre tu próximo anime favorito. Nuestro recomendador con IA analiza tu estado de ánimo, géneros preferidos y preferencias para sugerirte los mejores animes.
+        </p>
+        <a href="/" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-sans font-semibold text-sm uppercase tracking-widest text-red-400 border border-red-400/30 hover:bg-red-400/10 transition-all duration-300">
+          🎯 Obtener mis recomendaciones
+        </a>
+      </div>
+    </section>
+
+    <!-- Cómo funciona -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-8 text-center">¿Cómo funciona el recomendador de anime?</h2>
+      <div class="grid sm:grid-cols-3 gap-6">
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">💊</span>
+          <h3 class="text-white font-sans font-semibold">1. Elige la Píldora Roja</h3>
+          <p class="text-gray-400 text-sm">Selecciona el camino del anime en nuestra experiencia interactiva estilo Matrix.</p>
+        </div>
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">🎯</span>
+          <h3 class="text-white font-sans font-semibold">2. Responde las preguntas</h3>
+          <p class="text-gray-400 text-sm">Cuéntanos tu estado de ánimo, géneros favoritos, tipo de protagonista y más.</p>
+        </div>
+        <div class="glass p-6 text-center space-y-3">
+          <span class="text-3xl">🤖</span>
+          <h3 class="text-white font-sans font-semibold">3. Recibe tus recomendaciones</h3>
+          <p class="text-gray-400 text-sm">La IA te sugiere 3 animes perfectos con justificación personalizada.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Géneros -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-6 text-center">Géneros de anime disponibles</h2>
+      <div class="flex flex-wrap justify-center gap-3">
+        {['Acción / Shonen', 'Romance / Drama', 'Misterio / Thriller', 'Comedia / Slice of Life', 'Ciencia Ficción', 'Fantasía / Isekai', 'Terror / Psicológico', 'Deportes / Competición', 'Mecha', 'Seinen', 'Shojo', 'Aventura'].map((genre) => (
+          <span class="px-4 py-2 rounded-full text-sm border border-red-400/20 text-red-300/80 bg-red-400/5">
+            {genre}
+          </span>
+        ))}
+      </div>
+    </section>
+
+    <!-- Preguntas frecuentes -->
+    <section class="px-4 py-12 max-w-4xl mx-auto">
+      <h2 class="text-2xl font-sans font-bold text-white mb-8 text-center">Preguntas frecuentes sobre recomendaciones de anime</h2>
+      <div class="space-y-4">
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Qué anime debería ver si estoy triste?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Si te sientes melancólico, nuestro recomendador te sugerirá animes emotivos y reconfortantes como Clannad, Your Lie in April, o Violet Evergarden. La IA adapta las recomendaciones a tu estado de ánimo actual.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Qué anime ver si quiero acción?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Para amantes de la acción, el recomendador puede sugerirte desde shonen clásicos como Demon Slayer o Jujutsu Kaisen hasta seinen más maduros como Vinland Saga o Attack on Titan, según tu perfil.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Puedo elegir la duración del anime?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Sí. Puedes elegir entre películas/OVAs (~2h), series cortas (12 episodios), series medias (13-26 episodios) o sagas largas (+50 episodios). El recomendador ajusta los resultados.</p>
+        </details>
+        <details class="glass p-5 cursor-pointer group">
+          <summary class="text-white font-sans font-semibold flex items-center justify-between">
+            ¿Las recomendaciones son siempre diferentes?
+            <span class="text-cyber-purple group-open:rotate-45 transition-transform">+</span>
+          </summary>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">Sí. La IA genera recomendaciones únicas cada vez basándose en tus respuestas. Puedes repetir el proceso tantas veces como quieras para descubrir nuevos animes.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CTA final -->
+    <section class="px-4 py-16 max-w-4xl mx-auto text-center">
+      <h2 class="text-2xl font-sans font-bold text-white mb-4">¿Listo para descubrir tu próximo anime?</h2>
+      <p class="text-gray-400 mb-8">Es gratis, rápido y personalizado con inteligencia artificial.</p>
+      <a href="/" class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-sans font-semibold text-sm uppercase tracking-widest text-red-400 border border-red-400/30 hover:bg-red-400/10 transition-all duration-300">
+        💊 Empezar ahora
+      </a>
+    </section>
+
+    <!-- Footer SEO -->
+    <footer class="px-4 py-8 border-t border-white/5 max-w-4xl mx-auto">
+      <nav class="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+        <a href="/" class="hover:text-cyber-purple transition-colors">Inicio</a>
+        <a href="/recomendaciones/anime" class="text-red-400">Anime</a>
+        <a href="/recomendaciones/peliculas" class="hover:text-cyber-blue transition-colors">Películas</a>
+      </nav>
+      <p class="text-center text-gray-600 text-xs mt-4">&copy; 2025 Las Píldoras — The Choice Protocol. Recomendador de anime y películas con IA.</p>
+    </footer>
+  </main>
+</Layout>

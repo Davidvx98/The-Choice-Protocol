@@ -55,7 +55,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy':          'strict-origin-when-cross-origin',
   'Permissions-Policy':       'camera=(), microphone=(), geolocation=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cdn.myanimelist.net https://image.tmdb.org https://i.ytimg.com; font-src 'self'; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
+  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://cdn.myanimelist.net https://image.tmdb.org https://i.ytimg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
 };
 
 export const onRequest = defineMiddleware(async ({ request, url }, next) => {
@@ -83,8 +83,18 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   }
 
   // Cache static assets for performance (SEO: improves Core Web Vitals)
-  if (url.pathname.match(/\.(css|js|svg|png|jpg|webp|woff2?)$/)) {
+  if (url.pathname.match(/\.(css|js|svg|png|jpg|webp|woff2?|mp3|ico)$/)) {
     newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (!url.pathname.startsWith('/api/')) {
+    // HTML pages: short cache + revalidation for freshness
+    newHeaders.set('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200');
+  }
+
+  // SEO: Ensure crawlers can index pages
+  if (!url.pathname.startsWith('/api/')) {
+    newHeaders.set('X-Robots-Tag', 'index, follow');
+  } else {
+    newHeaders.set('X-Robots-Tag', 'noindex, nofollow');
   }
 
   return new Response(response.body, {
