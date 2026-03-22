@@ -5,7 +5,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = (import.meta.env.GEMINI_API_KEY || '').trim();
+const API_KEY = (process.env.GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || '').trim();
 const MODELS   = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
 const TIMEOUT_MS = 25_000;
 const MAX_RETRIES = 2;
