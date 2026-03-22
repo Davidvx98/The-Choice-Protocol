@@ -133,6 +133,7 @@
       if (detail.to !== 'pills') return;
 
       chosen = false;
+      delete scene!.dataset.chosen;
 
       const h2El = scene.querySelector('h2');
       gsap.set(scene, { opacity: 1 });
@@ -168,9 +169,10 @@
 
     });
 
-    // Pill choice handler
+    // Pill choice handler — use scene dataset to guard against double-init duplicate calls
     function choosePill(choice: string) {
-      if (chosen) return;
+      if (scene!.dataset.chosen === '1') return;
+      scene!.dataset.chosen = '1';
       chosen = true;
 
       // Pantalla completa para mayor inmersión

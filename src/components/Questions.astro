@@ -407,11 +407,16 @@
       const choice = localStorage.getItem('pillChoice');
       questions = choice === 'anime' ? questionsAnime : questionsMovie;
       currentIndex = 0;
+      // Reset answers from any previous run
+      Object.keys(answers).forEach(k => delete answers[k]);
 
       scene.classList.remove('scene-hidden');
       scene.classList.add('scene-visible');
 
-      gsap.from(scene, { opacity: 0, duration: 0.5 });
+      // Kill any lingering GSAP tweens (e.g. opacity:0 left from finishQuestions)
+      gsap.killTweensOf(scene);
+      gsap.set(scene, { opacity: 0 });
+      gsap.to(scene, { opacity: 1, duration: 0.5 });
       renderQuestion(0);
     });
   }
