@@ -9,10 +9,10 @@
     <!-- Greeting -->
     <div class="text-center space-y-3">
       <p id="pills-greeting" class="text-gray-400 text-lg font-mono"></p>
-      <h2 class="text-2xl sm:text-3xl font-sans font-bold text-white">
+      <h2 id="pills-title" class="text-2xl sm:text-3xl font-sans font-bold text-white">
         Es hora de elegir tu camino
       </h2>
-      <p class="text-gray-500 text-sm max-w-md">
+      <p id="pills-subtitle" class="text-gray-500 text-sm max-w-md">
         Una vez elijas, no hay vuelta atrás...
       </p>
     </div>
@@ -41,7 +41,7 @@
             <p class="text-red-400 font-sans font-bold text-lg tracking-wide group-hover:glow-text transition-all">
               ANIME
             </p>
-            <p class="text-gray-500 text-xs mt-1">Píldora Roja</p>
+            <p id="pills-red-sub" class="text-gray-500 text-xs mt-1">Píldora Roja</p>
           </div>
         </div>
         <!-- Glow bg -->
@@ -51,7 +51,7 @@
       <!-- Divider -->
       <div class="hidden sm:flex flex-col items-center gap-2 text-gray-600">
         <div class="w-px h-16 bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
-        <span class="text-xs font-mono">ó</span>
+        <span id="pills-or-text" class="text-xs font-mono">ó</span>
         <div class="w-px h-16 bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
       </div>
 
@@ -74,10 +74,10 @@
           </div>
           <!-- Label -->
           <div class="text-center">
-            <p class="text-blue-400 font-sans font-bold text-lg tracking-wide group-hover:glow-text transition-all">
+            <p id="pills-movies-label" class="text-blue-400 font-sans font-bold text-lg tracking-wide group-hover:glow-text transition-all">
               PELÍCULAS
             </p>
-            <p class="text-gray-500 text-xs mt-1">Píldora Azul</p>
+            <p id="pills-blue-sub" class="text-gray-500 text-xs mt-1">Píldora Azul</p>
           </div>
         </div>
         <!-- Glow bg -->
@@ -101,7 +101,41 @@
 
     let chosen = false;
 
-    // Matrix rain
+      type PillLang = 'en' | 'es';
+    const PILLS_STRINGS: Record<PillLang, {
+      title: string; subtitle: string; or: string;
+      redSub: string; blueSub: string; moviesLabel: string;
+      greeting: (name: string) => string;
+    }> = {
+      es: {
+        title: 'Es hora de elegir tu camino',
+        subtitle: 'Una vez elijas, no hay vuelta atrás...',
+        or: 'ó', redSub: 'Píldora Roja', blueSub: 'Píldora Azul', moviesLabel: 'PELÍCULAS',
+        greeting: (n) => `Bien, ${n}...`,
+      },
+      en: {
+        title: "It's time to choose your path",
+        subtitle: 'Once you choose, there is no going back...',
+        or: 'or', redSub: 'Red Pill', blueSub: 'Blue Pill', moviesLabel: 'MOVIES',
+        greeting: (n) => `Well, ${n}...`,
+      },
+    };
+    function getPillsLang(): PillLang { return (localStorage.getItem('lang') || 'en') as PillLang; }
+    function applyPillsLang(lang: PillLang) {
+      const s = PILLS_STRINGS[lang];
+      const titleEl    = document.getElementById('pills-title');
+      const subEl      = document.getElementById('pills-subtitle');
+      const orEl       = document.getElementById('pills-or-text');
+      const redSubEl   = document.getElementById('pills-red-sub');
+      const blueSubEl  = document.getElementById('pills-blue-sub');
+      const moviesEl   = document.getElementById('pills-movies-label');
+      if (titleEl)   titleEl.textContent   = s.title;
+      if (subEl)     subEl.textContent     = s.subtitle;
+      if (orEl)      orEl.textContent      = s.or;
+      if (redSubEl)  redSubEl.textContent  = s.redSub;
+      if (blueSubEl) blueSubEl.textContent = s.blueSub;
+      if (moviesEl)  moviesEl.textContent  = s.moviesLabel;
+    }
     let stopRain: (() => void) | undefined;
     function startMatrixRain() {
       const ctx = canvas!.getContext('2d');
@@ -147,7 +181,7 @@
 
       // Set greeting with name
       const name = localStorage.getItem('userName') || 'Viajero';
-      greeting!.textContent = `Bien, ${name}...`;
+      greeting!.textContent = PILLS_STRINGS[getPillsLang()].greeting(name);
 
       // Start matrix rain
       stopRain = startMatrixRain();
@@ -216,6 +250,12 @@
 
     pillRed.addEventListener('click', () => choosePill('anime'));
     pillBlue.addEventListener('click', () => choosePill('movie'));
+
+    // Apply initial lang + listen for changes
+    applyPillsLang(getPillsLang());
+    window.addEventListener('lang:change', (e: Event) => {
+      applyPillsLang(((e as CustomEvent).detail.lang || 'en') as PillLang);
+    });
   }
 
   document.addEventListener('astro:page-load', initPills);

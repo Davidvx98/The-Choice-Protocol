@@ -66,6 +66,28 @@
 
     if (!scene || !nameEl || !nameWrap || !textEl || !btn || !btnWrap) return;
 
+    type MsgLang = 'en' | 'es';
+    const MSG_STRINGS: Record<MsgLang, { labelText: string; msg: string; btnText: string; nameFallback: string; }> = {
+      es: {
+        labelText: 'Tu destino te espera',
+        msg: 'Hemos estado esperandote...\nTu proxima aventura esta a punto de comenzar.',
+        btnText: 'Comenzar la aventura &nbsp;->',
+        nameFallback: 'Viajero',
+      },
+      en: {
+        labelText: 'Your destiny awaits',
+        msg: 'We have been waiting for you...\nYour next adventure is about to begin.',
+        btnText: 'Begin the adventure &nbsp;->',
+        nameFallback: 'Traveler',
+      },
+    };
+    function getMsgLang(): MsgLang { return (localStorage.getItem('lang') || 'en') as MsgLang; }
+    function applyMsgLang(lang: MsgLang) {
+      const s = MSG_STRINGS[lang];
+      if (label) label.textContent = s.labelText;
+      if (btn) btn.innerHTML = s.btnText;
+    }
+
     function spawnParticles() {
       if (!particles) return;
       particles.innerHTML = '';
@@ -128,7 +150,7 @@
       if (detail.to !== 'message') return;
 
       const returning = !!localStorage.getItem('introDone');
-      const name = localStorage.getItem('userName') || 'Viajero';
+      const name = localStorage.getItem('userName') || MSG_STRINGS[getMsgLang()].nameFallback;
       nameEl!.textContent = name;
       textEl!.innerHTML = '';
 
@@ -154,7 +176,7 @@
       tl.call(() => { playIntroAudio(); });
       tl.call(() => {
         void (async () => {
-          const MSG = 'Hemos estado esperandote...\nTu proxima aventura esta a punto de comenzar.';
+        const MSG = MSG_STRINGS[getMsgLang()].msg;
           if (returning) {
             textEl!.innerHTML = MSG.replace(/\n/g, '<br>');
             gsap.to(btnWrap, { opacity: 1, duration: 0.3 });
@@ -182,6 +204,12 @@
           }));
         },
       });
+    });
+
+    // Apply initial lang + listen for changes
+    applyMsgLang(getMsgLang());
+    window.addEventListener('lang:change', (e: Event) => {
+      applyMsgLang(((e as CustomEvent).detail.lang || 'en') as MsgLang);
     });
   }
 

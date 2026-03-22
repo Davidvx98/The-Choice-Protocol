@@ -181,19 +181,57 @@
         !letterStage || !letterCard || !letterText || !letterCursor ||
         !nameSection || !nameInput || !continuarSec || !continuarBtn) return;
 
-    const LETTER_CONTENT = [
-      'Te estaba esperando...',
-      '',
-      'No has llegado aquí por casualidad.',
-      'Algo o alguien te ha traído hasta este umbral.',
-      '',
-      'Lo que está a punto de revelarse no es para todos.',
-      'Solo aquellos que se atreven a elegir',
-      'descubren lo que realmente buscan.',
-      '',
-      'Antes de continuar... necesito saber tu nombre.',
-      'Los secretos no se comparten con desconocidos.',
-    ].join('\n');
+    type Lang = 'en' | 'es';
+    const INTRO_STRINGS: Record<Lang, { hint: string; letterContent: string; nameLabel: string; namePlaceholder: string; continuar: string; }> = {
+      es: {
+        hint: 'Haz click para abrir',
+        letterContent: [
+          'Te estaba esperando...',
+          '',
+          'No has llegado aquí por casualidad.',
+          'Algo o alguien te ha traído hasta este umbral.',
+          '',
+          'Lo que está a punto de revelarse no es para todos.',
+          'Solo aquellos que se atreven a elegir',
+          'descubren lo que realmente buscan.',
+          '',
+          'Antes de continuar... necesito saber tu nombre.',
+          'Los secretos no se comparten con desconocidos.',
+        ].join('\n'),
+        nameLabel: '¿Cómo te llamas, viajero?',
+        namePlaceholder: 'Tu nombre...',
+        continuar: 'Continuar &nbsp;→',
+      },
+      en: {
+        hint: 'Click to open',
+        letterContent: [
+          'I have been waiting for you...',
+          '',
+          "You didn't arrive here by chance.",
+          'Something — or someone — brought you to this threshold.',
+          '',
+          'What is about to be revealed is not for everyone.',
+          'Only those who dare to choose',
+          'discover what they truly seek.',
+          '',
+          'Before we continue... I need to know your name.',
+          'Secrets are not shared with strangers.',
+        ].join('\n'),
+        nameLabel: "What's your name, traveler?",
+        namePlaceholder: 'Your name...',
+        continuar: 'Continue &nbsp;→',
+      },
+    };
+
+    function getIntroLang(): Lang { return (localStorage.getItem('lang') || 'en') as Lang; }
+    function applyIntroLang(lang: Lang) {
+      const s = INTRO_STRINGS[lang];
+      if (hint) hint.textContent = s.hint;
+      const nameLabel = document.querySelector<HTMLElement>('label[for="user-name"]');
+      if (nameLabel) nameLabel.textContent = s.nameLabel;
+      if (nameInput) nameInput.placeholder = s.namePlaceholder;
+      if (continuarBtn) continuarBtn.innerHTML = s.continuar;
+    }
 
     // ── Audio carta ──────────────────────────────────────────────────────
     let letterAudio: HTMLAudioElement | null = null;
@@ -330,7 +368,7 @@
         const returning = !!localStorage.getItem('introDone');
         void (async () => {
           await new Promise(r => setTimeout(r, returning ? 0 : 120));
-          await typeText(LETTER_CONTENT, letterText!, returning ? 2 : 85);
+          await typeText(INTRO_STRINGS[getIntroLang()].letterContent, letterText!, returning ? 2 : 85);
           // Mostrar input de nombre
           await new Promise(r => setTimeout(r, returning ? 0 : 320));
           gsap.to(nameSection, {
@@ -384,6 +422,12 @@
     continuarBtn.addEventListener('click', goToPills);
     nameInput.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter') goToPills();
+    });
+
+    // Apply initial lang + listen for changes
+    applyIntroLang(getIntroLang());
+    window.addEventListener('lang:change', (e: Event) => {
+      applyIntroLang(((e as CustomEvent).detail.lang || 'en') as Lang);
     });
   }
 

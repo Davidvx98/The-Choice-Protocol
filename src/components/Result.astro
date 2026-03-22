@@ -276,7 +276,7 @@
 
     function startAutoAdvance() {
       if (cards.length < 2) return;
-      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 5000);
+      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 10000);
     }
 
     function clearAutoAdvance() {
@@ -285,6 +285,25 @@
 
     prevBtn?.addEventListener('click', () => goTo((activeIdx - 1 + cards.length) % cards.length));
     nextBtn?.addEventListener('click', () => goTo((activeIdx + 1) % cards.length));
+
+    // ── Genre translation ──────────────────────────────────────────────────────────
+    const GENRE_MAP_ES: Record<string, string> = {
+      'Action': 'Acción', 'Adventure': 'Aventura', 'Comedy': 'Comedia',
+      'Drama': 'Drama', 'Fantasy': 'Fantasía', 'Horror': 'Terror',
+      'Mystery': 'Misterio', 'Romance': 'Romance', 'Sci-Fi': 'Ciencia Ficción',
+      'Science Fiction': 'Ciencia Ficción', 'Thriller': 'Thriller',
+      'Slice of Life': 'Slice of Life', 'Suspense': 'Suspenso',
+      'Supernatural': 'Sobrenatural', 'Sports': 'Deportes', 'Music': 'Música',
+      'Documentary': 'Documental', 'Animation': 'Animación', 'Family': 'Familiar',
+      'History': 'Historia', 'War': 'Guerra', 'Western': 'Western',
+      'Crime': 'Crimen', 'Ecchi': 'Ecchi', 'Isekai': 'Isekai',
+      'Mecha': 'Mecha', 'Psychological': 'Psicológico', 'School': 'Escolar',
+    };
+
+    function translateGenre(g: string): string {
+      if (lang === 'es') return GENRE_MAP_ES[g] || g;
+      return g;
+    }
 
     // ── Build card ─────────────────────────────────────────────────────────────────
     function buildCard(rec: any, idx: number): HTMLElement {
@@ -315,7 +334,7 @@
         ? `<div class="flex flex-wrap gap-1.5">${(rec.genres as string[]).map((g: string) =>
             `<span class="px-2 py-0.5 rounded-full text-xs border"
                    style="background:rgba(176,38,255,0.1);color:rgba(176,38,255,0.8);border-color:rgba(176,38,255,0.2);"
-             >${esc(g)}</span>`).join('')}</div>` : '';
+             >${esc(translateGenre(g))}</span>`).join('')}</div>` : '';
 
       const trailerHref = 'https://www.youtube.com/results?search_query=' + encodeURIComponent((rec.title || '') + ' trailer');
       const rankLabel = str.ranks[Math.min(idx, 2)];
@@ -333,9 +352,9 @@
             <h3 class="text-white font-sans font-bold leading-tight"
                 style="font-size:clamp(1rem,3vw,1.35rem);">${esc(rec.title || '—')}</h3>
             ${metaHtml}
+            ${genresHtml}
             <p class="text-gray-300 text-sm leading-relaxed"
                data-orig-desc="${esc(rec.description || '')}">${esc(rec.description || '')}</p>
-            ${genresHtml}
             <a href="${trailerHref}" target="_blank" rel="noopener noreferrer"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border transition-all duration-200"
                style="border-color:rgba(0,212,255,0.3);color:rgba(0,212,255,0.7);">${str.trailer}</a>
@@ -425,7 +444,7 @@
             ? `<img src="${esc(rec.image)}" alt="${esc(rec.title)}" class="w-12 h-16 object-cover rounded-lg flex-shrink-0 border border-white/10" loading="lazy" />`
             : '';
           const genreSpans = (rec.genres || []).slice(0, 3).map((g: string) =>
-            `<span class="px-1.5 py-0.5 rounded text-xs" style="background:rgba(176,38,255,0.08);color:rgba(176,38,255,0.7);">${esc(g)}</span>`
+            `<span class="px-1.5 py-0.5 rounded text-xs" style="background:rgba(176,38,255,0.08);color:rgba(176,38,255,0.7);">${esc(translateGenre(g))}</span>`
           ).join('');
           return `<div class="flex gap-3 items-start p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
             ${imgTag}

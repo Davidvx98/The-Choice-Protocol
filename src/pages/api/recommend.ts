@@ -5,7 +5,7 @@
  */
 import type { APIRoute } from 'astro';
 import { mapAnswersToTags, buildGeminiPrompt } from '../../lib/recommendation';
-import { searchAnime, searchMovies } from '../../lib/apis';
+import { searchAnime, searchMovies, fetchAnimeImage, fetchMovieImage } from '../../lib/apis';
 import { askGeminiSafe } from '../../lib/gemini';
 import type { UserAnswers } from '../../lib/recommendation';
 
@@ -99,10 +99,11 @@ export const POST: APIRoute = async ({ request }) => {
           ? parsed
           : (Array.isArray(parsed.recommendations) ? parsed.recommendations : [parsed]);
 
-        const recommendations = items.slice(0, 3).map((item: any) => {
+        const rawItems = items.slice(0, 3).map((item: any) => {
+          const needle = (item.title || '').toLowerCase();
           const match = apiResults.find(r =>
-            r.title.toLowerCase().includes((item.title || '').toLowerCase()) ||
-            (item.title || '').toLowerCase().includes(r.title.toLowerCase())
+            r.title.toLowerCase().includes(needle) ||
+            needle.includes(r.title.toLowerCase())
           );
           return {
             title: clampStr(item.title, 200),
@@ -116,6 +117,17 @@ export const POST: APIRoute = async ({ request }) => {
             genres: match?.genres || tags.genreNames,
           };
         });
+
+        // Fill missing posters with a direct title search
+        const fetchImage = type === 'anime' ? fetchAnimeImage : fetchMovieImage;
+        const recommendations = await Promise.all(
+          rawItems.map(async (rec) => {
+            if (!rec.image && rec.title) {
+              rec.image = await fetchImage(rec.title);
+            }
+            return rec;
+          })
+        );
 
         result = { recommendations };
       } catch (parseErr) {

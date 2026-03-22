@@ -147,3 +147,47 @@ export async function searchMovies(params: {
 
   return mapped.filter(m => !isSequel(m.title)).slice(0, limit);
 }
+
+// --- Poster fetchers (for Gemini titles not in API results) ---
+
+export async function fetchAnimeImage(title: string): Promise<string> {
+  try {
+    const query = new URLSearchParams({ q: title, limit: '1', sfw: 'true' });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    let res: Response;
+    try {
+      res = await fetch(`${JIKAN_BASE}/anime?${query}`, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (!res.ok) return '';
+    const data = await res.json();
+    const item = data.data?.[0];
+    return item?.images?.jpg?.large_image_url || item?.images?.jpg?.image_url || '';
+  } catch {
+    return '';
+  }
+}
+
+export async function fetchMovieImage(title: string): Promise<string> {
+  const TMDB_KEY = (process.env.TMDB_API_KEY || import.meta.env.TMDB_API_KEY || '').trim();
+  if (!TMDB_KEY) return '';
+  try {
+    const query = new URLSearchParams({ api_key: TMDB_KEY, query: title, page: '1', include_adult: 'false', language: 'es-ES' });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    let res: Response;
+    try {
+      res = await fetch(`${TMDB_BASE}/search/movie?${query}`, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (!res.ok) return '';
+    const data = await res.json();
+    const item = data.results?.[0];
+    return item?.poster_path ? `${TMDB_IMG}${item.poster_path}` : '';
+  } catch {
+    return '';
+  }
+}
