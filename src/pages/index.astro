@@ -180,12 +180,13 @@ import Result from '../components/Result.astro';
     }
   });
 
-  // Sync settings volume → YouTube players
+  // Sync settings volume → audio players
   settingsVol?.addEventListener('input', () => {
     const v = parseFloat(settingsVol.value);
     if (settingsVolPct) settingsVolPct.textContent = `${Math.round(v * 100)}%`;
-    const vol = Math.round(v * 100);
-    Object.values(ytPlayers).forEach(p => { try { p.setVolume(vol); } catch {} });
+    Object.values(audioPlayers).forEach(({ audio }) => {
+      if (!audio.paused) audio.volume = v;
+    });
   });
 
   document.getElementById('settings-reset')?.addEventListener('click', () => {
@@ -325,133 +326,96 @@ import Result from '../components/Result.astro';
   // Dispatch on load so components can pick up saved preference
   setTimeout(() => applyLang(currentLang), 0);
 
-  // ── Music player (YouTube IFrame API, scene-aware) ──────────────────────
-  const SCENE_TRACKS: Record<string, { name: string; videoId: string; playlist?: string }> = {
-    intro:       { name: 'Las píldoras – Inicio',        videoId: '0zYw5IuEUZ0' },
-    questions:   { name: 'Las píldoras – Preguntas',     videoId: 'UqFTDTof0WM', playlist: 'UqFTDTof0WM,4-aqOqM8HWU' },
-    anime:       { name: 'Las píldoras – Anime',         videoId: 'jT2V7qLE5DA' },
-    anime_sad:   { name: 'Las píldoras – Anime Triste',  videoId: 'FpSu77yl5W0', playlist: 'FpSu77yl5W0,u_upMKUm16M' },
-    anime_drama: { name: 'Las píldoras – Anime Drama',   videoId: 'jK7vncSpcFI' },
+  // ── Music player (HTML5 Audio, scene-aware) ──────────────────────────────
+  const SCENE_TRACKS: Record<string, { name: string; files: string[] }> = {
+    intro:       { name: 'Las píldoras – Inicio',       files: ['/music/1) Death Note - (Ryuk\'s Theme A) Music.mp3'] },
+    questions:   { name: 'Las píldoras – Preguntas',    files: ['/music/2) Death Note - (Writing Theme F) Music.mp3', '/music/3) Death Note - (Near\'s Theme C) Music.mp3'] },
+    anime:       { name: 'Las píldoras – Anime',        files: ['/music/4) Death Note - (Kira\'s Theme F) Music.mp3'] },
+    anime_sad:   { name: 'Las píldoras – Anime Triste', files: ['/music/5) Mirai Nikki Sad music.mp3', '/music/6) Fairy Tail Sad Theme Song.mp3'] },
+    anime_drama: { name: 'Las píldoras – Anime Drama',  files: ['/music/7) Fate - Akira Kosemura.mp3'] },
   };
 
-  const DEFAULT_VOLUME = 15; // medium-low (0–100)
+  const DEFAULT_VOLUME = 0.15; // 0–1 range
 
-  let ytPlayers: Record<string, any> = {};
-  let activeVideoId = SCENE_TRACKS.intro.videoId;
-  let playing = false;
-  let pendingPlay = false;
-
-  // Build hidden containers for each YouTube player
-  const ytContainer = document.createElement('div');
-  ytContainer.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;overflow:hidden;';
-  Object.values(SCENE_TRACKS).forEach(({ videoId }) => {
-    const div = document.createElement('div');
-    div.id = `yt-${videoId}`;
-    ytContainer.appendChild(div);
+  // Create one Audio element per scene; cycle files on 'ended' for playlists
+  const audioPlayers: Record<string, { audio: HTMLAudioElement; files: string[]; idx: number }> = {};
+  Object.entries(SCENE_TRACKS).forEach(([scene, { files }]) => {
+    const audio = new Audio(files[0]);
+    audio.loop    = files.length === 1;
+    audio.volume  = DEFAULT_VOLUME;
+    audio.preload = 'auto';
+    const state = { audio, files, idx: 0 };
+    if (files.length > 1) {
+      audio.addEventListener('ended', () => {
+        state.idx = (state.idx + 1) % files.length;
+        audio.src = files[state.idx];
+        audio.volume = getVolume();
+        audio.play().catch(() => {});
+      });
+    }
+    audioPlayers[scene] = state;
   });
-  document.body.appendChild(ytContainer);
+
+  let activeScene = 'intro';
+  let playing     = false;
 
   function getVolume(): number {
     const sv = document.getElementById('settings-vol') as HTMLInputElement | null;
-    return sv ? Math.round(parseFloat(sv.value) * 100) : DEFAULT_VOLUME;
+    return sv ? parseFloat(sv.value) : DEFAULT_VOLUME;
   }
 
-  const FADE_MS = 1500; // duración del crossfade en ms
+  const FADE_MS = 1500;
 
-  function fadeVolume(player: any, from: number, to: number, duration: number, onDone?: () => void) {
+  function fadeVolume(audio: HTMLAudioElement, from: number, to: number, duration: number, onDone?: () => void) {
     const steps    = 30;
     const interval = duration / steps;
     const delta    = (to - from) / steps;
     let step = 0;
     const iv = setInterval(() => {
       step++;
-      const vol = Math.round(Math.max(0, Math.min(100, from + delta * step)));
-      try { player.setVolume(vol); } catch {}
-      if (step >= steps) {
-        clearInterval(iv);
-        onDone?.();
-      }
+      audio.volume = Math.max(0, Math.min(1, from + delta * step));
+      if (step >= steps) { clearInterval(iv); onDone?.(); }
     }, interval);
   }
 
-  function stopCurrent() {
-    const p = ytPlayers[activeVideoId];
-    if (!p) return;
-    const vol = getVolume();
-    fadeVolume(p, vol, 0, FADE_MS, () => {
-      try { p.pauseVideo(); p.setVolume(vol); } catch {}
-    });
-  }
-
   function startCurrent() {
-    const p = ytPlayers[activeVideoId];
-    if (!p) { pendingPlay = true; return; }
-    try {
-      p.setVolume(0);
-      p.playVideo();
-      fadeVolume(p, 0, getVolume(), FADE_MS);
+    const state = audioPlayers[activeScene];
+    if (!state) return;
+    state.audio.volume = 0;
+    state.audio.play().then(() => {
+      fadeVolume(state.audio, 0, getVolume(), FADE_MS);
       playing = true;
-    } catch { pendingPlay = true; }
+    }).catch(() => {});
   }
 
-  function switchTrack(videoId: string) {
-    if (videoId === activeVideoId) return;
-    const prevId    = activeVideoId;
+  function switchTrack(scene: string) {
+    if (scene === activeScene) return;
+    const prevScene = activeScene;
     const targetVol = getVolume();
-    activeVideoId   = videoId;
+    activeScene = scene;
     if (!playing) return;
 
-    // Fade out current track
-    const prevPlayer = ytPlayers[prevId];
-    if (prevPlayer) {
-      fadeVolume(prevPlayer, targetVol, 0, FADE_MS, () => {
-        try { prevPlayer.pauseVideo(); prevPlayer.setVolume(targetVol); } catch {}
+    // Fade out previous
+    const prev = audioPlayers[prevScene];
+    if (prev) {
+      fadeVolume(prev.audio, targetVol, 0, FADE_MS, () => {
+        prev.audio.pause();
+        prev.audio.volume = targetVol;
+        // Reset playlist index for next time
+        prev.idx = 0;
+        prev.audio.src = prev.files[0];
       });
     }
 
-    // Fade in new track
-    const nextPlayer = ytPlayers[videoId];
-    if (nextPlayer) {
-      try {
-        nextPlayer.setVolume(0);
-        nextPlayer.playVideo();
-        fadeVolume(nextPlayer, 0, targetVol, FADE_MS);
-      } catch { pendingPlay = true; }
-    } else {
-      pendingPlay = true;
+    // Fade in new
+    const next = audioPlayers[scene];
+    if (next) {
+      next.audio.currentTime = 0;
+      next.audio.volume = 0;
+      next.audio.play().then(() => {
+        fadeVolume(next.audio, 0, targetVol, FADE_MS);
+      }).catch(() => {});
     }
-  }
-
-  // Initialise YouTube IFrame API
-  (window as any).onYouTubeIframeAPIReady = function () {
-    Object.values(SCENE_TRACKS).forEach(({ videoId, playlist }) => {
-      ytPlayers[videoId] = new (window as any).YT.Player(`yt-${videoId}`, {
-        height: '1',
-        width: '1',
-        videoId,
-        playerVars: { autoplay: 0, controls: 0, disablekb: 1, loop: 1, playlist: playlist ?? videoId },
-        events: {
-          onReady(ev: any) {
-            ev.target.setVolume(DEFAULT_VOLUME);
-            if (pendingPlay && videoId === activeVideoId) {
-              ev.target.playVideo();
-              playing = true;
-              pendingPlay = false;
-            }
-          },
-        },
-      });
-    });
-  };
-
-  // Load the API script (sets onYouTubeIframeAPIReady first, then loads script)
-  if (!(window as any).YT) {
-    const ytScript = document.createElement('script');
-    ytScript.src = 'https://www.youtube.com/iframe_api';
-    document.head.appendChild(ytScript);
-  } else {
-    // API already present (e.g. back-navigation)
-    (window as any).onYouTubeIframeAPIReady();
   }
 
   // La música solo inicia cuando el usuario hace click en el sobre
@@ -464,7 +428,7 @@ import Result from '../components/Result.astro';
     if (!playing) return;
     const { to } = (e as CustomEvent).detail;
     if (to === 'questions') {
-      switchTrack(SCENE_TRACKS.questions.videoId);
+      switchTrack('questions');
     } else if (to === 'result') {
       if (localStorage.getItem('pillChoice') === 'anime') {
         let answers: Record<string, string> = {};
@@ -472,15 +436,15 @@ import Result from '../components/Result.astro';
         const mood   = answers['mood']   ?? '';
         const genres = answers['genres'] ?? '';
         if (mood === 'melancholic') {
-          switchTrack(SCENE_TRACKS.anime_sad.videoId);
+          switchTrack('anime_sad');
         } else if (mood === 'nostalgic' || genres.includes('romance')) {
-          switchTrack(SCENE_TRACKS.anime_drama.videoId);
+          switchTrack('anime_drama');
         } else {
-          switchTrack(SCENE_TRACKS.anime.videoId);
+          switchTrack('anime');
         }
       }
     } else if (to === 'pills' || to === 'message') {
-      switchTrack(SCENE_TRACKS.intro.videoId);
+      switchTrack('intro');
     }
   });
 
