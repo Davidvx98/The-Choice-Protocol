@@ -11,11 +11,11 @@ Descubre qué ver hoy a través de un viaje cinematográfico único
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![GSAP](https://img.shields.io/badge/GSAP-3.x-88CE02?style=flat-square&logo=greensock&logoColor=white)](https://gsap.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
-[![Deployed on CubePath](https://img.shields.io/badge/Deployed%20on-CubePath-6C47FF?style=flat-square)](https://vps22682.cubepath.net)
+[![Deployed on teampoza](https://img.shields.io/badge/Deployed%20on-teampoza.dev-6C47FF?style=flat-square)](https://the-choice-protocol.teampoza.dev)
 
 ---
 
-🌐 **[Demo en vivo → vps22682.cubepath.net](https://vps22682.cubepath.net)**
+🌐 **[Demo en vivo → the-choice-protocol.teampoza.dev](https://the-choice-protocol.teampoza.dev)**
 
 ---
 
@@ -84,7 +84,7 @@ Este proyecto está desplegado en **[CubePath](https://midu.link/cubepath)** usa
 # Variables de entorno en CubePath
 GEMINI_API_KEY=tu_clave_gemini
 TMDB_API_KEY=tu_clave_tmdb
-SITE_URL=https://vps22682.cubepath.net
+SITE_URL=https://the-choice-protocol.teampoza.dev
 NODE_ENV=production
 ```
 
@@ -106,7 +106,7 @@ El Dockerfile está preparado para un build en dos etapas:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-🌐 **Pruébalo en: [vps22682.cubepath.net](https://vps22682.cubepath.net)**
+🌐 **Pruébalo en: [the-choice-protocol.teampoza.dev](https://the-choice-protocol.teampoza.dev)**
 
 ---
 
