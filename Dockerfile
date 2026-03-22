@@ -18,6 +18,9 @@ FROM node:22-alpine AS runtime
 
 WORKDIR /app
 
+# bash needed for Dokploy exec commands (Alpine only has sh by default)
+RUN apk add --no-cache bash
+
 # Non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
