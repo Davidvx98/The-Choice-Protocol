@@ -9,7 +9,7 @@ interface Props {
   breadcrumbs?: { name: string; path: string }[];
 }
 
-const SITE_URL = import.meta.env.SITE ?? 'https://the-choice-protocol.com';
+const SITE_URL = import.meta.env.SITE_URL ?? import.meta.env.SITE ?? 'vps22682.cubepath.net';
 const generator = Astro.generator;
 
 const {
@@ -67,6 +67,7 @@ const canonicalURL = new URL(canonicalPath, SITE_URL).href;
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
 
     <!-- Preconnect para rendimiento -->
