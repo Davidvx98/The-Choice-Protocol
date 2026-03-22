@@ -26,12 +26,14 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 
 ENV HOST=0.0.0.0
+# PORT can be overridden at runtime: docker run -e PORT=8080 ...
+# @astrojs/node standalone mode reads HOST and PORT automatically
 ENV PORT=3000
 ENV NODE_ENV=production
 
-EXPOSE 3000
+# EXPOSE is documentation only; actual port is controlled by PORT env var
+EXPOSE ${PORT}
 
-# Use ${PORT} so it works regardless of what Coolify injects
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:${PORT:-3000}/ > /dev/null || exit 1
 
