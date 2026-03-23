@@ -71,7 +71,7 @@ export async function searchAnime(params: {
   const data = await res.json();
   
   const mapped: AnimeResult[] = (data.data || []).map((item: any) => ({
-    title: item.title_english || item.title || 'Sin título',
+    title: item.title || item.title_english || 'Sin título',  // romaji first, English fallback
     description: item.synopsis || '',
     image: item.images?.jpg?.large_image_url || item.images?.jpg?.image_url || '',
     score: item.score || 0,
