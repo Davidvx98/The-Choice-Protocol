@@ -124,6 +124,67 @@ import Result from '../components/Result.astro';
       </div>
     </div>
 
+    <!-- ⚖️ Legal notice — bottom-right (opposite to settings) -->
+    <div id="legal-badge" class="fixed bottom-4 right-4 z-50">
+      <button id="legal-badge-btn"
+        aria-label="Aviso Legal"
+        class="relative flex items-center gap-2 px-3 py-2 rounded-xl
+               bg-black/60 border border-white/10 backdrop-blur-md
+               text-gray-400 text-xs font-mono
+               hover:border-cyber-blue/60 hover:text-cyber-blue
+               transition-all duration-300 cursor-pointer select-none">
+        <span class="text-base leading-none">⚖️</span>
+        <span id="legal-badge-label" class="tracking-widest uppercase hidden sm:inline">Legal</span>
+      </button>
+
+      <!-- Legal panel — opens above the button -->
+      <div id="legal-panel"
+        class="absolute bottom-full right-0 mb-3 w-72
+               glass rounded-2xl px-5 py-4 flex-col gap-3
+               hidden">
+        <p id="legal-panel-title" class="text-cyber-blue text-xs font-mono tracking-widest uppercase border-b border-white/5 pb-2">Aviso Legal</p>
+        <p id="legal-panel-body" class="text-gray-400 text-xs leading-relaxed">
+          Las Píldoras es un proyecto de código abierto creado con fines demostrativos.
+          Las recomendaciones son generadas por IA y no sustituyen criterio profesional.
+          Las imágenes provienen de APIs públicas (MyAnimeList, TMDB).
+        </p>
+        <div class="flex flex-col gap-1 pt-1">
+          <a id="legal-cookies-link" href="#"
+            class="text-cyber-blue text-xs font-mono hover:underline underline-offset-2 transition">
+            🍪 <span id="legal-cookies-label">Política de Cookies</span>
+          </a>
+          <a id="legal-terms-link" href="#"
+            class="text-cyber-blue text-xs font-mono hover:underline underline-offset-2 transition">
+            📄 <span id="legal-terms-label">Términos de Uso</span>
+          </a>
+        </div>
+        <p id="legal-copy" class="text-gray-600 text-xs">© 2025 Las Píldoras — Open Source</p>
+      </div>
+    </div>
+
+    <!-- 🍪 Cookie consent banner -->
+    <div id="cookie-banner"
+      class="fixed bottom-16 left-1/2 -translate-x-1/2 z-[60] w-[92%] max-w-xl
+             glass rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center gap-3
+             border border-white/10 shadow-xl hidden">
+      <span class="text-2xl flex-shrink-0">🍪</span>
+      <p id="cookie-banner-text" class="text-gray-300 text-xs leading-relaxed text-center sm:text-left flex-1">
+        Usamos cookies analíticas (Google Analytics) para mejorar la experiencia. No se almacena información personal.
+      </p>
+      <div class="flex gap-2 flex-shrink-0">
+        <button id="cookie-reject"
+          class="px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs font-mono
+                 hover:border-white/30 hover:text-white transition-all duration-200">
+          <span id="cookie-reject-label">Rechazar</span>
+        </button>
+        <button id="cookie-accept"
+          class="px-3 py-1.5 rounded-lg bg-cyber-purple/80 text-white text-xs font-mono
+                 hover:bg-cyber-purple transition-all duration-200">
+          <span id="cookie-accept-label">Aceptar</span>
+        </button>
+      </div>
+    </div>
+
   </main>
 
   <!-- SEO Footer: Internal linking + structured navigation -->
@@ -330,6 +391,112 @@ import Result from '../components/Result.astro';
 
   // Dispatch on load so components can pick up saved preference
   setTimeout(() => applyLang(currentLang), 0);
+
+  // ── Legal notice panel ──────────────────────────────────────────────────
+  const legalBadgeBtn = document.getElementById('legal-badge-btn') as HTMLElement | null;
+  const legalPanel    = document.getElementById('legal-panel')     as HTMLElement | null;
+  let legalOpen = false;
+
+  legalBadgeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    legalOpen = !legalOpen;
+    legalPanel?.classList.toggle('hidden', !legalOpen);
+    legalPanel?.classList.toggle('flex', legalOpen);
+    if (legalBadgeBtn) legalBadgeBtn.style.color = legalOpen ? 'var(--color-cyber-blue, #00e5ff)' : '';
+  });
+  document.addEventListener('click', (e) => {
+    if (legalOpen && !document.getElementById('legal-badge')?.contains(e.target as Node)) {
+      legalOpen = false;
+      legalPanel?.classList.add('hidden');
+      legalPanel?.classList.remove('flex');
+      if (legalBadgeBtn) legalBadgeBtn.style.color = '';
+    }
+  });
+
+  // ── Cookie consent banner ───────────────────────────────────────────────
+  const cookieBanner  = document.getElementById('cookie-banner')  as HTMLElement | null;
+  const cookieAccept  = document.getElementById('cookie-accept')  as HTMLElement | null;
+  const cookieReject  = document.getElementById('cookie-reject')  as HTMLElement | null;
+  const COOKIE_KEY    = 'cookie-consent';
+
+  function hideCookieBanner() {
+    if (cookieBanner) {
+      cookieBanner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      cookieBanner.style.opacity = '0';
+      cookieBanner.style.transform = 'translateX(-50%) translateY(12px)';
+      setTimeout(() => cookieBanner.classList.add('hidden'), 420);
+    }
+  }
+
+  if (!localStorage.getItem(COOKIE_KEY)) {
+    // Show after a short delay so it doesn't pop up instantly
+    setTimeout(() => {
+      if (cookieBanner) {
+        cookieBanner.classList.remove('hidden');
+        cookieBanner.style.opacity = '0';
+        cookieBanner.style.transform = 'translateX(-50%) translateY(12px)';
+        requestAnimationFrame(() => {
+          cookieBanner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+          cookieBanner.style.opacity = '1';
+          cookieBanner.style.transform = 'translateX(-50%) translateY(0)';
+        });
+      }
+    }, 2000);
+  }
+
+  cookieAccept?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_KEY, 'accepted');
+    hideCookieBanner();
+    // Enable GA tracking if previously denied
+    (window as any)['ga-disable-G-1PS7MR6MS2'] = false;
+  });
+  cookieReject?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_KEY, 'rejected');
+    hideCookieBanner();
+    // Disable GA tracking
+    (window as any)['ga-disable-G-1PS7MR6MS2'] = true;
+  });
+
+  // Disable GA if previously rejected
+  if (localStorage.getItem(COOKIE_KEY) === 'rejected') {
+    (window as any)['ga-disable-G-1PS7MR6MS2'] = true;
+  }
+
+  // Translate cookie + legal UI on lang change
+  const LEGAL_STRINGS: Record<string, Record<string, string>> = {
+    en: {
+      bannerText: 'We use analytics cookies (Google Analytics) to improve the experience. No personal data is stored.',
+      accept: 'Accept', reject: 'Decline',
+      legalTitle: 'Legal Notice', badgeLabel: 'Legal',
+      body: 'Las Píldoras is an open-source project for demonstration purposes. Recommendations are AI-generated and do not replace professional judgment. Images come from public APIs (MyAnimeList, TMDB).',
+      cookiesLabel: 'Cookie Policy', termsLabel: 'Terms of Use', copy: '© 2025 Las Píldoras — Open Source',
+    },
+    es: {
+      bannerText: 'Usamos cookies analíticas (Google Analytics) para mejorar la experiencia. No se almacena información personal.',
+      accept: 'Aceptar', reject: 'Rechazar',
+      legalTitle: 'Aviso Legal', badgeLabel: 'Legal',
+      body: 'Las Píldoras es un proyecto de código abierto creado con fines demostrativos. Las recomendaciones son generadas por IA y no sustituyen criterio profesional. Las imágenes provienen de APIs públicas (MyAnimeList, TMDB).',
+      cookiesLabel: 'Política de Cookies', termsLabel: 'Términos de Uso', copy: '© 2025 Las Píldoras — Open Source',
+    },
+  };
+
+  function applyLegalLang(lang: string) {
+    const s = LEGAL_STRINGS[lang] || LEGAL_STRINGS['en'];
+    const setTxt = (id: string, t: string) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+    setTxt('cookie-banner-text',  s.bannerText);
+    setTxt('cookie-accept-label', s.accept);
+    setTxt('cookie-reject-label', s.reject);
+    setTxt('legal-panel-title',   s.legalTitle);
+    setTxt('legal-badge-label',   s.badgeLabel);
+    setTxt('legal-panel-body',    s.body);
+    setTxt('legal-cookies-label', s.cookiesLabel);
+    setTxt('legal-terms-label',   s.termsLabel);
+    setTxt('legal-copy',          s.copy);
+  }
+
+  window.addEventListener('lang:change', (e: Event) => {
+    applyLegalLang((e as CustomEvent).detail.lang || 'en');
+  });
 
   // ── Music player (HTML5 Audio, scene-aware) ──────────────────────────────
   const SCENE_TRACKS: Record<string, { name: string; files: string[] }> = {
