@@ -41,6 +41,7 @@
 
 <script>
   import { gsap } from 'gsap';
+  import { t as _t, ta, getLang } from '../i18n/index.ts';
 
   interface QuestionOption {
     label: string;
@@ -414,6 +415,10 @@
 
     if (!scene || !card || !titleEl || !subtitleEl || !optionsEl || !progressBar || !progressText || !progressPct) return;
 
+    const _lang = getLang();
+    const _questionsAnime = ta<Question>(_lang, 'questions.anime');
+    const _questionsMovie = ta<Question>(_lang, 'questions.movie');
+
     let currentIndex = 0;
     let questions: Question[] = [];
     const answers: Record<string, string> = {};
@@ -472,18 +477,14 @@
       if (anyBlocked) {
         const noteEl = document.getElementById('q-conflict-note');
         if (noteEl) {
-          noteEl.textContent = currentLang === 'es'
-            ? '🚫 Algunas opciones no encajan con tu estado de ánimo y están desactivadas'
-            : "🚫 Some options don't match your mood and are disabled";
+          noteEl.textContent = _t(_lang, 'questions.moodConflict');
           noteEl.style.display = 'block';
         }
       }
     }
 
-    type QLang = 'en' | 'es';
-    let currentLang: QLang = (localStorage.getItem('lang') || 'en') as QLang;
     function getProgressText(idx: number, total: number): string {
-      return currentLang === 'es' ? `Pregunta ${idx + 1} de ${total}` : `Question ${idx + 1} of ${total}`;
+      return _t(_lang, 'questions.progressText', { current: String(idx + 1), total: String(total) });
     }
 
     function renderQuestion(index: number) {
@@ -517,7 +518,7 @@
         multiContinue.style.display = q.multi ? 'flex' : 'none';
         if (multiBtn) {
           multiBtn.disabled = true;
-          multiBtn.textContent = currentLang === 'es' ? 'Continuar →' : 'Continue →';
+          multiBtn.textContent = _t(_lang, 'questions.multiBtn');
         }
       }
 
@@ -606,9 +607,7 @@
       const noteEl = document.getElementById('q-conflict-note');
       if (noteEl) {
         if (blockedGroups.size > 0) {
-          noteEl.textContent = currentLang === 'es'
-            ? '⚠️ Géneros incompatibles bloqueados — alegre/relajado y terror/psicológico no se mezclan'
-            : "⚠️ Incompatible genres blocked — light-hearted and horror/thriller don't mix";
+          noteEl.textContent = _t(_lang, 'questions.genreConflict');
           noteEl.style.display = 'block';
         } else {
           noteEl.style.display = 'none';
@@ -635,10 +634,8 @@
       if (multiBtn) {
         multiBtn.disabled = multiSelected.size === 0;
         multiBtn.textContent = multiSelected.size > 0
-          ? currentLang === 'es'
-            ? `Continuar con ${multiSelected.size} seleccionado${multiSelected.size > 1 ? 's' : ''} →`
-            : `Continue with ${multiSelected.size} selected →`
-          : currentLang === 'es' ? 'Continuar →' : 'Continue →';
+          ? _t(_lang, 'questions.multiBtnSelected', { n: String(multiSelected.size) })
+          : _t(_lang, 'questions.multiBtn');
       }
       // Update conflict blocking after every toggle
       const q = questions[currentIndex];
@@ -722,10 +719,7 @@
       if (detail.to !== 'questions') return;
 
       const choice = localStorage.getItem('pillChoice');
-      currentLang = (localStorage.getItem('lang') || 'en') as QLang;
-      questions = choice === 'anime'
-        ? (currentLang === 'es' ? questionsAnime : questionsAnimeEN)
-        : (currentLang === 'es' ? questionsMovie : questionsMovieEN);
+      questions = choice === 'anime' ? _questionsAnime : _questionsMovie;
       currentIndex = 0;
       // Reset answers from any previous run
       Object.keys(answers).forEach(k => delete answers[k]);
@@ -740,17 +734,7 @@
       renderQuestion(0);
     });
 
-    window.addEventListener('lang:change', (e: Event) => {
-      currentLang = ((e as CustomEvent).detail.lang || 'en') as QLang;
-      if (!scene!.classList.contains('scene-hidden')) {
-        const choice = localStorage.getItem('pillChoice');
-        questions = choice === 'anime'
-          ? (currentLang === 'es' ? questionsAnime : questionsAnimeEN)
-          : (currentLang === 'es' ? questionsMovie : questionsMovieEN);
-        currentIndex = Math.min(currentIndex, questions.length - 1);
-        renderQuestion(currentIndex);
-      }
-    });
+
   }
 
   document.addEventListener('astro:page-load', initQuestions);

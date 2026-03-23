@@ -91,6 +91,9 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   // Cache static assets for performance (SEO: improves Core Web Vitals)
   if (url.pathname.match(/\.(css|js|svg|png|jpg|webp|woff2?|mp3|ico)$/)) {
     newHeaders.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (url.pathname.startsWith('/api/')) {
+    // API responses must never be cached — they contain dynamic/user-specific data
+    newHeaders.set('Cache-Control', 'no-store');
   } else if (!url.pathname.startsWith('/api/')) {
     // HTML pages: short cache + revalidation for freshness
     newHeaders.set('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200');

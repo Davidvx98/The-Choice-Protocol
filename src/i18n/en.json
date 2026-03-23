@@ -1,0 +1,278 @@
+{
+  "settings": {
+    "title": "Settings",
+    "volLabel": "Music volume",
+    "resetTitle": "Reset experience",
+    "resetDesc": "Clears name, choice and answers. Returns to start.",
+    "resetBtn": "Reset",
+    "histTitle": "Session history",
+    "histDesc": "Review your saved recommendations.",
+    "histBtn": "View history",
+    "skipTitle": "Skip animations",
+    "skipDesc": "Go directly to pill choice. Default name: Traveler.",
+    "skipFxTitle": "No visual effects",
+    "skipFxDesc": "Disables particles and code rain.",
+    "langLabel": "Language"
+  },
+  "legal": {
+    "title": "Legal Notice",
+    "badgeLabel": "Legal",
+    "body": "Las Píldoras is an open-source project for demonstration purposes. Recommendations are AI-generated and do not replace professional judgment. Images come from public APIs (MyAnimeList, TMDB).",
+    "cookiesLabel": "Cookie Policy",
+    "termsLabel": "Terms of Use",
+    "copy": "© 2025 Las Píldoras — Open Source"
+  },
+  "cookies": {
+    "bannerText": "We use analytics cookies (Google Analytics) to improve the experience. No personal data is stored.",
+    "accept": "Accept",
+    "reject": "Decline"
+  },
+  "envelope": {
+    "hint": "Click to open",
+    "letter": "I have been waiting for you...\n\nYou didn't arrive here by chance.\nSomething or someone brought you to this threshold.\n\nWhat is about to be revealed is not for everyone.\nOnly those who dare to choose\ndiscover what they truly seek.\n\nBefore we continue... I need to know your name.\nSecrets are not shared with strangers.",
+    "nameLabel": "What's your name, traveler?",
+    "namePlaceholder": "Your name...",
+    "continuar": "Continue →"
+  },
+  "letter": {
+    "label": "Your destiny awaits",
+    "msg": "We have been waiting for you...\nYour next adventure is about to begin.",
+    "btn": "Begin the adventure →",
+    "nameFallback": "Traveler"
+  },
+  "pills": {
+    "greeting": "Well, {name}...",
+    "title": "It's time to choose your path",
+    "subtitle": "Once you choose, there is no going back...",
+    "or": "or",
+    "redSub": "Red Pill",
+    "blueSub": "Blue Pill",
+    "moviesLabel": "MOVIES"
+  },
+  "questions": {
+    "progressText": "Question {current} of {total}",
+    "multiBtn": "Continue",
+    "multiBtnSelected": "Continue with {n} selected",
+    "moodConflict": "🚫 Some options don't match your mood and are disabled",
+    "genreConflict": "⚠️ Incompatible genres blocked — light-hearted and horror/thriller don't mix",
+    "anime": [
+      {
+        "id": "mood",
+        "title": "How are you feeling right now?",
+        "subtitle": "Your mood will guide the recommendation",
+        "options": [
+          { "label": "Euphoric / Energized",   "value": "energetic",   "icon": "⚡" },
+          { "label": "Happy and relaxed",      "value": "happy",       "icon": "☀️" },
+          { "label": "Nostalgic",              "value": "nostalgic",   "icon": "🌅" },
+          { "label": "Melancholic",            "value": "melancholic", "icon": "🌧️" },
+          { "label": "Need to think",          "value": "thoughtful",  "icon": "🌙" },
+          { "label": "No filter, surprise me", "value": "random",      "icon": "🎲" }
+        ]
+      },
+      {
+        "id": "genres",
+        "title": "What genres appeal to you?",
+        "subtitle": "You can choose multiple — more data, better results",
+        "multi": true,
+        "exclusiveGroups": [["light", "dark"]],
+        "options": [
+          { "label": "Action / Fights",        "value": "action",  "icon": "⚔️" },
+          { "label": "Romance / Drama",        "value": "romance", "icon": "💕", "conflictGroup": "light" },
+          { "label": "Mystery / Thriller",     "value": "mystery", "icon": "🔍" },
+          { "label": "Comedy / Slice of life", "value": "comedy",  "icon": "😄", "conflictGroup": "light" },
+          { "label": "Science fiction",        "value": "scifi",   "icon": "🚀" },
+          { "label": "Fantasy / Isekai",       "value": "fantasy", "icon": "🔮" },
+          { "label": "Horror / Psychological", "value": "horror",  "icon": "👁️", "conflictGroup": "dark" },
+          { "label": "Sports / Competition",   "value": "sports",  "icon": "🏆", "conflictGroup": "light" }
+        ]
+      },
+      {
+        "id": "duration",
+        "title": "How much time do you have?",
+        "subtitle": "We'll choose something that fits your schedule",
+        "options": [
+          { "label": "Movie / OVA (~2h)",      "value": "short",  "icon": "⏱️" },
+          { "label": "Short series (12 eps)",  "value": "medium", "icon": "📺" },
+          { "label": "Medium series (13-26)",  "value": "mid",    "icon": "🗓️" },
+          { "label": "Long saga (+50 eps)",    "value": "long",   "icon": "📚" }
+        ]
+      },
+      {
+        "id": "protagonist",
+        "title": "What type of protagonist do you connect with?",
+        "subtitle": "The hero of your story",
+        "options": [
+          { "label": "Underdog who beats the odds", "value": "underdog",  "icon": "💪" },
+          { "label": "Complex antihero",            "value": "antihero",  "icon": "🗡️" },
+          { "label": "Intelligent strategist",      "value": "strategic", "icon": "♟️" },
+          { "label": "Group of friends / team",     "value": "ensemble",  "icon": "👫" }
+        ]
+      },
+      {
+        "id": "setting",
+        "title": "What world do you want to get lost in?",
+        "subtitle": "The setting of your adventure",
+        "options": [
+          { "label": "Fantasy world / magic",      "value": "fantasy_world",   "icon": "🏰" },
+          { "label": "Everyday Japan / realistic", "value": "daily_life",      "icon": "🏫" },
+          { "label": "Dystopian future / mecha",   "value": "dystopia",        "icon": "🤖" },
+          { "label": "Another world (isekai)",      "value": "isekai",          "icon": "🌀" },
+          { "label": "Post-apocalyptic",           "value": "post_apocalypse", "icon": "🌋" },
+          { "label": "Historical / Feudal",        "value": "historical",      "icon": "⛩️" }
+        ]
+      },
+      {
+        "id": "intensity",
+        "title": "How intense do you want it?",
+        "subtitle": "The narrative depth you are looking for",
+        "options": [
+          { "label": "Light and easy to watch", "value": "light",    "icon": "🌸" },
+          { "label": "Fun and dynamic",         "value": "balanced", "icon": "⚡" },
+          { "label": "Deep and complex",        "value": "deep",     "icon": "🧠" },
+          { "label": "Dark and disturbing",     "value": "dark",     "icon": "🖤" }
+        ]
+      },
+      {
+        "id": "extras",
+        "title": "What can't it be without?",
+        "subtitle": "Your must-haves — pick as many as you like",
+        "multi": true,
+        "options": [
+          { "label": "Epic / memorable OST",           "value": "ost",         "icon": "🎵" },
+          { "label": "Unexpected plot twists",         "value": "twists",      "icon": "🌀" },
+          { "label": "Spectacular animation",          "value": "animation",   "icon": "✨" },
+          { "label": "Very well-written characters",   "value": "characters",  "icon": "👥" },
+          { "label": "Prominent romance",              "value": "romance_sub", "icon": "💞" },
+          { "label": "Satisfying ending",              "value": "good_ending", "icon": "🏁" }
+        ]
+      }
+    ],
+    "movie": [
+      {
+        "id": "mood",
+        "title": "How are you feeling right now?",
+        "subtitle": "Your mood will guide the recommendation",
+        "options": [
+          { "label": "I want to laugh out loud",    "value": "happy",       "icon": "😂" },
+          { "label": "I want to cry / feel moved",  "value": "melancholic", "icon": "😢" },
+          { "label": "I want pure adrenaline",      "value": "excited",     "icon": "🔥" },
+          { "label": "I want to reflect",           "value": "thoughtful",  "icon": "💭" },
+          { "label": "I want something romantic",   "value": "romantic",    "icon": "🌹" },
+          { "label": "No filter, surprise me",      "value": "random",      "icon": "🎲" }
+        ]
+      },
+      {
+        "id": "genres",
+        "title": "What genres appeal to you?",
+        "subtitle": "You can choose multiple — more data, better results",
+        "multi": true,
+        "exclusiveGroups": [["light", "dark"]],
+        "options": [
+          { "label": "Action / Adventure", "value": "action",      "icon": "💥" },
+          { "label": "Drama / Romance",    "value": "romance",     "icon": "❤️", "conflictGroup": "light" },
+          { "label": "Horror / Suspense",  "value": "horror",      "icon": "👻", "conflictGroup": "dark" },
+          { "label": "Comedy",             "value": "comedy",      "icon": "🤣", "conflictGroup": "light" },
+          { "label": "Science fiction",    "value": "scifi",       "icon": "🛸" },
+          { "label": "Thriller / Crime",   "value": "thriller",    "icon": "🔪", "conflictGroup": "dark" },
+          { "label": "Animation",          "value": "animation",   "icon": "🎠", "conflictGroup": "light" },
+          { "label": "Documentary",        "value": "documentary", "icon": "📹" }
+        ]
+      },
+      {
+        "id": "duration",
+        "title": "How much time do you have?",
+        "subtitle": "To adjust the runtime",
+        "options": [
+          { "label": "Short (<90 min)",        "value": "short",  "icon": "⏱️" },
+          { "label": "Standard (90-120 min)", "value": "medium", "icon": "🎬" },
+          { "label": "Long (2-2.5h)",          "value": "long2",  "icon": "🎞️" },
+          { "label": "Epic (+2.5h)",           "value": "epic",   "icon": "🏔️" }
+        ]
+      },
+      {
+        "id": "experience",
+        "title": "What kind of experience are you looking for?",
+        "subtitle": "The feeling you want to take away",
+        "options": [
+          { "label": "Disconnect and escape",       "value": "escape",    "icon": "🏖️" },
+          { "label": "Make me think for days",      "value": "thinking",  "icon": "🧩" },
+          { "label": "Can't stop watching",         "value": "gripping",  "icon": "😮" },
+          { "label": "Connect emotionally",         "value": "emotional", "icon": "💛" }
+        ]
+      },
+      {
+        "id": "intensity",
+        "title": "How intense do you want it?",
+        "subtitle": "The narrative complexity level",
+        "options": [
+          { "label": "Light, just to relax",        "value": "light",    "icon": "🍿" },
+          { "label": "Substantial but accessible",  "value": "balanced", "icon": "⚖️" },
+          { "label": "Mind-blowing",                "value": "deep",     "icon": "🤯" },
+          { "label": "Dark and raw",                "value": "dark",     "icon": "🖤" }
+        ]
+      },
+      {
+        "id": "era",
+        "title": "What era do you prefer?",
+        "subtitle": "The temporal flavor of your movie",
+        "options": [
+          { "label": "Classic (before 2000)", "value": "classic", "icon": "📼" },
+          { "label": "2000-2010",             "value": "2000s",   "icon": "💿" },
+          { "label": "2010-2020",             "value": "2010s",   "icon": "📱" },
+          { "label": "Very recent (2020+)",   "value": "recent",  "icon": "🆕" }
+        ]
+      },
+      {
+        "id": "extras",
+        "title": "What ingredients can't be missing?",
+        "subtitle": "Choose all you want",
+        "multi": true,
+        "options": [
+          { "label": "Memorable soundtrack",          "value": "ost",         "icon": "🎶" },
+          { "label": "Explosive plot twists",         "value": "twists",      "icon": "💣" },
+          { "label": "Cinematography / visual style", "value": "visual",      "icon": "📸" },
+          { "label": "Unforgettable performances",    "value": "acting",      "icon": "🎭" },
+          { "label": "Love story",                    "value": "romance_sub", "icon": "💞" },
+          { "label": "Ending that makes you think",   "value": "open_ending", "icon": "❓" }
+        ]
+      }
+    ]
+  },
+  "result": {
+    "loading": [
+      "Consulting the oracle...",
+      "Analyzing your answers...",
+      "Searching parallel dimensions...",
+      "Finding perfect options...",
+      "Almost ready..."
+    ],
+    "loadingSub": "Analyzing your answers with AI",
+    "label": "Your recommendations",
+    "header": "For you, {name}",
+    "ranks": ["Main recommendation", "Second option", "Third option"],
+    "retry": "Try again",
+    "history": "View history",
+    "noResults": "Couldn't generate recommendations. Try again.",
+    "trailer": "🎬 Watch trailer",
+    "translating": "Translating...",
+    "histLabel": "Saved sessions",
+    "histTitle": "History",
+    "histEmpty": "No recommendations saved yet.\nComplete the flow to create your first entry.",
+    "histClose": "✕ Close",
+    "histSaved": "✓ Saved to history",
+    "typeAnime": "🔴 Anime",
+    "typeMovies": "🔵 Movies",
+    "genreMap": {
+      "Action": "Action", "Adventure": "Adventure", "Comedy": "Comedy",
+      "Drama": "Drama", "Fantasy": "Fantasy", "Horror": "Horror",
+      "Mystery": "Mystery", "Romance": "Romance", "Sci-Fi": "Sci-Fi",
+      "Science Fiction": "Science Fiction", "Thriller": "Thriller",
+      "Slice of Life": "Slice of Life", "Suspense": "Suspense",
+      "Supernatural": "Supernatural", "Sports": "Sports", "Music": "Music",
+      "Documentary": "Documentary", "Animation": "Animation", "Family": "Family",
+      "History": "History", "War": "War", "Western": "Western",
+      "Crime": "Crime", "Ecchi": "Ecchi", "Isekai": "Isekai",
+      "Mecha": "Mecha", "Psychological": "Psychological", "School": "School"
+    }
+  }
+}

@@ -159,6 +159,7 @@
 
 <script>
   import { gsap } from 'gsap';
+  import { t as _t, getLang, setLang } from '../i18n/index.ts';
 
   function initIntro() {
     const scene         = document.getElementById('intro-scene');
@@ -181,63 +182,35 @@
         !letterStage || !letterCard || !letterText || !letterCursor ||
         !nameSection || !nameInput || !continuarSec || !continuarBtn) return;
 
-    type Lang = 'en' | 'es';
-    const INTRO_STRINGS: Record<Lang, { hint: string; letterContent: string; nameLabel: string; namePlaceholder: string; continuar: string; }> = {
-      es: {
-        hint: 'Haz click para abrir',
-        letterContent: [
-          'Te estaba esperando...',
-          '',
-          'No has llegado aquí por casualidad.',
-          'Algo o alguien te ha traído hasta este umbral.',
-          '',
-          'Lo que está a punto de revelarse no es para todos.',
-          'Solo aquellos que se atreven a elegir',
-          'descubren lo que realmente buscan.',
-          '',
-          'Antes de continuar... necesito saber tu nombre.',
-          'Los secretos no se comparten con desconocidos.',
-        ].join('\n'),
-        nameLabel: '¿Cómo te llamas, viajero?',
-        namePlaceholder: 'Tu nombre...',
-        continuar: 'Continuar &nbsp;→',
-      },
-      en: {
-        hint: 'Click to open',
-        letterContent: [
-          'I have been waiting for you...',
-          '',
-          "You didn't arrive here by chance.",
-          'Something or someone brought you to this threshold.',
-          '',
-          'What is about to be revealed is not for everyone.',
-          'Only those who dare to choose',
-          'discover what they truly seek.',
-          '',
-          'Before we continue... I need to know your name.',
-          'Secrets are not shared with strangers.',
-        ].join('\n'),
-        nameLabel: "What's your name, traveler?",
-        namePlaceholder: 'Your name...',
-        continuar: 'Continue &nbsp;→',
-      },
-    };
+    const _lang = getLang();
 
-    function getIntroLang(): Lang { return (localStorage.getItem('lang') || 'en') as Lang; }
-    function applyIntroLang(lang: Lang) {
-      const s = INTRO_STRINGS[lang];
-      if (hint) hint.textContent = s.hint;
+    // ── Lang toggle (junto al hint) ─────────────────────────────────
+    const langToggleBtn = document.getElementById('lang-toggle');
+    const langFlagEl    = document.getElementById('lang-flag');
+    const langLabelEl   = document.getElementById('lang-label');
+    if (langFlagEl)  langFlagEl.textContent  = _lang === 'es' ? '🇪🇸' : '🇬🇧';
+    if (langLabelEl) langLabelEl.textContent = _lang === 'es' ? 'ES' : 'EN';
+    langToggleBtn?.addEventListener('click', () => setLang(_lang === 'es' ? 'en' : 'es'));
+
+    const _introHint        = _t(_lang, 'envelope.hint');
+    const _introLetter      = _t(_lang, 'envelope.letter');
+    const _introNameLabel   = _t(_lang, 'envelope.nameLabel');
+    const _introPlaceholder = _t(_lang, 'envelope.namePlaceholder');
+    const _introContinuar   = _t(_lang, 'envelope.continuar');
+
+    function applyIntroLang() {
+      if (hint) hint.textContent = _introHint;
       const nameLabel = document.querySelector<HTMLElement>('label[for="user-name"]');
-      if (nameLabel) nameLabel.textContent = s.nameLabel;
-      if (nameInput) nameInput.placeholder = s.namePlaceholder;
-      if (continuarBtn) continuarBtn.innerHTML = s.continuar;
+      if (nameLabel) nameLabel.textContent = _introNameLabel;
+      if (nameInput) nameInput.placeholder = _introPlaceholder;
+      if (continuarBtn) continuarBtn.innerHTML = _introContinuar;
     }
 
     // ── Audio carta ──────────────────────────────────────────────────────
     let letterAudio: HTMLAudioElement | null = null;
 
     function playLetterAudio() {
-      const file = getIntroLang() === 'es'
+      const file = _lang === 'es'
         ? '/media/lectura_carta_es.mp3'
         : '/media/lectura_carta_eng.mp3';
       letterAudio = new Audio(file);
@@ -259,16 +232,20 @@
     });
 
     // ── Float del sobre ──────────────────────────────────────────────────
-    const floatAnim = gsap.to('#envelope-wrapper', {
-      y: -10,
-      duration: 2.2,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-    });
+    const _skipFx = localStorage.getItem('skipParticles') === '1';
+    let floatAnim: gsap.core.Tween | undefined;
+    if (!_skipFx) {
+      floatAnim = gsap.to('#envelope-wrapper', {
+        y: -10,
+        duration: 2.2,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+      });
+    }
 
-    // ── Partículas ───────────────────────────────────────────────────────
-    if (particles) {
+    // ── Partículas ──────────────────────────────────────────────────────
+    if (!_skipFx && particles) {
       for (let i = 0; i < 18; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
@@ -331,7 +308,7 @@
       document.documentElement.requestFullscreen().catch(() => {});
       window.dispatchEvent(new CustomEvent('envelope:opened'));
 
-      floatAnim.kill();
+      floatAnim?.kill();
       gsap.set('#envelope-wrapper', { y: 0 });
 
       // Preparar la carta para que GSAP la pueda animar
@@ -371,7 +348,7 @@
         const returning = !!localStorage.getItem('introDone');
         void (async () => {
           await new Promise(r => setTimeout(r, returning ? 0 : 120));
-          await typeText(INTRO_STRINGS[getIntroLang()].letterContent, letterText!, returning ? 2 : 85);
+          await typeText(_introLetter, letterText!, returning ? 2 : 85);
           // Mostrar input de nombre
           await new Promise(r => setTimeout(r, returning ? 0 : 320));
           gsap.to(nameSection, {
@@ -427,11 +404,8 @@
       if (e.key === 'Enter') goToPills();
     });
 
-    // Apply initial lang + listen for changes
-    applyIntroLang(getIntroLang());
-    window.addEventListener('lang:change', (e: Event) => {
-      applyIntroLang(((e as CustomEvent).detail.lang || 'en') as Lang);
-    });
+    // Apply lang on init
+    applyIntroLang();
   }
 
   document.addEventListener('astro:page-load', initIntro);

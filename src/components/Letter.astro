@@ -51,6 +51,7 @@
 
 <script>
   import { gsap } from 'gsap';
+  import { t as _t, getLang } from '../i18n/index.ts';
 
   function initMessage() {
     const scene     = document.getElementById('message-scene');
@@ -66,30 +67,20 @@
 
     if (!scene || !nameEl || !nameWrap || !textEl || !btn || !btnWrap) return;
 
-    type MsgLang = 'en' | 'es';
-    const MSG_STRINGS: Record<MsgLang, { labelText: string; msg: string; btnText: string; nameFallback: string; }> = {
-      es: {
-        labelText: 'Tu destino te espera',
-        msg: 'Hemos estado esperandote...\nTu proxima aventura esta a punto de comenzar.',
-        btnText: 'Comenzar la aventura &nbsp;->',
-        nameFallback: 'Viajero',
-      },
-      en: {
-        labelText: 'Your destiny awaits',
-        msg: 'We have been waiting for you...\nYour next adventure is about to begin.',
-        btnText: 'Begin the adventure &nbsp;->',
-        nameFallback: 'Traveler',
-      },
-    };
-    function getMsgLang(): MsgLang { return (localStorage.getItem('lang') || 'en') as MsgLang; }
-    function applyMsgLang(lang: MsgLang) {
-      const s = MSG_STRINGS[lang];
-      if (label) label.textContent = s.labelText;
-      if (btn) btn.innerHTML = s.btnText;
+    const _lang = getLang();
+
+    const _msgLabel       = _t(_lang, 'letter.label');
+    const _msgMsg         = _t(_lang, 'letter.msg');
+    const _msgBtn         = _t(_lang, 'letter.btn');
+    const _msgNameFallback = _t(_lang, 'letter.nameFallback');
+
+    function applyMsgLang() {
+      if (label) label.textContent = _msgLabel;
+      if (btn) btn.innerHTML = _msgBtn;
     }
 
     function spawnParticles() {
-      if (!particles) return;
+      if (!particles || localStorage.getItem('skipParticles') === '1') return;
       particles.innerHTML = '';
       for (let i = 0; i < 20; i++) {
         const p = document.createElement('div');
@@ -127,7 +118,7 @@
     let introAudio: HTMLAudioElement | null = null;
 
     function playIntroAudio() {
-      const file = getMsgLang() === 'es'
+      const file = _lang === 'es'
         ? '/media/lectura_intro_aventura_es.mp3'
         : '/media/lectura_intro_aventura_eng.mp3';
       introAudio = new Audio(file);
@@ -153,7 +144,7 @@
       if (detail.to !== 'message') return;
 
       const returning = !!localStorage.getItem('introDone');
-      const name = localStorage.getItem('userName') || MSG_STRINGS[getMsgLang()].nameFallback;
+      const name = localStorage.getItem('userName') || _msgNameFallback;
       nameEl!.textContent = name;
       textEl!.innerHTML = '';
 
@@ -179,12 +170,11 @@
       tl.call(() => { playIntroAudio(); });
       tl.call(() => {
         void (async () => {
-        const MSG = MSG_STRINGS[getMsgLang()].msg;
           if (returning) {
-            textEl!.innerHTML = MSG.replace(/\n/g, '<br>');
+            textEl!.innerHTML = _msgMsg.replace(/\n/g, '<br>');
             gsap.to(btnWrap, { opacity: 1, duration: 0.3 });
           } else {
-            await typeText(MSG);
+            await typeText(_msgMsg);
             gsap.to(btnWrap, { opacity: 1, duration: 0.5, delay: 0.3 });
           }
         })();
@@ -209,11 +199,8 @@
       });
     });
 
-    // Apply initial lang + listen for changes
-    applyMsgLang(getMsgLang());
-    window.addEventListener('lang:change', (e: Event) => {
-      applyMsgLang(((e as CustomEvent).detail.lang || 'en') as MsgLang);
-    });
+    // Apply lang on init
+    applyMsgLang();
   }
 
   document.addEventListener('astro:page-load', initMessage);

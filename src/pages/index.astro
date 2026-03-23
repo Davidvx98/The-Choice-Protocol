@@ -74,27 +74,15 @@ import Result from '../components/Result.astro';
         <p class="text-cyber-purple text-xs font-mono tracking-widest uppercase border-b border-white/5 pb-2"
            id="cfg-title">Configuración</p>
 
-        <!-- Language -->
-        <div class="flex items-center justify-between">
-          <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">🌐 <span id="cfg-lang-label">Idioma</span></p>
-          <button id="lang-toggle"
-            aria-label="Cambiar idioma"
-            class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/10 text-xs font-mono text-gray-300
-                   hover:border-cyber-purple/60 hover:text-cyber-purple transition-all duration-200 cursor-pointer select-none">
-            <span id="lang-flag">🇬🇧</span>
-            <span id="lang-label">English</span>
-          </button>
-        </div>
-
         <!-- Volume -->
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between">
             <label for="settings-vol" class="text-gray-400 text-xs font-mono flex items-center gap-1.5">
               🔊 <span id="cfg-vol-label">Music volume</span>
             </label>
-            <span id="settings-vol-pct" class="text-cyber-purple text-xs font-mono">5%</span>
+            <span id="settings-vol-pct" class="text-cyber-purple text-xs font-mono">10%</span>
           </div>
-          <input id="settings-vol" type="range" min="0" max="1" step="0.05" value="0.05"
+          <input id="settings-vol" type="range" min="0" max="1" step="0.05" value="0.10"
             class="w-full accent-cyber-purple cursor-pointer h-1" aria-label="Volume" />
         </div>
 
@@ -112,6 +100,18 @@ import Result from '../components/Result.astro';
             </button>
           </div>
           <p id="cfg-skip-desc" class="text-gray-600 text-xs leading-snug">Go directly to pill choice. Default name: Viajero.</p>
+          <!-- Sub-option: disable particles/matrix rain for low-end devices -->
+          <div id="skip-fx-row" class="flex items-center justify-between pl-3 border-l border-white/10" style="display:none;">
+            <p class="text-gray-500 text-xs font-mono flex items-center gap-1.5">✨ <span id="cfg-skip-fx-label">Sin efectos visuales</span></p>
+            <button id="settings-skipfx-toggle"
+              role="switch" aria-checked="false"
+              class="relative w-8 h-4 rounded-full transition-colors duration-300 flex-shrink-0 focus:outline-none"
+              style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);">
+              <span id="settings-skipfx-thumb"
+                class="absolute top-0.5 left-0.5 w-3 h-3 rounded-full transition-all duration-200"
+                style="background:#6b7280;"></span>
+            </button>
+          </div>
         </div>
 
         <!-- Reset experience -->
@@ -281,11 +281,8 @@ import Result from '../components/Result.astro';
   // ── Skip animations toggle ─────────────────────────────────────────────────
   const skipToggleBtn   = document.getElementById('settings-skip-toggle') as HTMLElement | null;
   const skipThumb       = document.getElementById('settings-skip-thumb')  as HTMLElement | null;
-  const DEFAULT_NAME_EN = 'Traveler';
-  const DEFAULT_NAME_ES = 'Viajero';
-
   function getDefaultName() {
-    return (localStorage.getItem('lang') || 'es') === 'es' ? DEFAULT_NAME_ES : DEFAULT_NAME_EN;
+    return getLang() === 'es' ? 'Viajero' : 'Traveler';
   }
 
   function setSkipUI(on: boolean) {
@@ -295,6 +292,9 @@ import Result from '../components/Result.astro';
     skipToggleBtn.style.borderColor = on ? 'rgba(176,38,255,0.8)' : 'rgba(255,255,255,0.12)';
     skipThumb.style.background  = on ? '#fff' : '#6b7280';
     skipThumb.style.transform   = on ? 'translateX(20px)' : 'translateX(0)';
+    // Show/hide the particles sub-option
+    const skipFxRow = document.getElementById('skip-fx-row');
+    if (skipFxRow) skipFxRow.style.display = on ? 'flex' : 'none';
   }
 
   function doSkipToPills() {
@@ -339,6 +339,24 @@ import Result from '../components/Result.astro';
     setTimeout(doSkipToPills, 50);
   }
 
+  // ── Particles/effects sub-option ──────────────────────────────────────────
+  const skipFxToggleBtn = document.getElementById('settings-skipfx-toggle') as HTMLElement | null;
+  const skipFxThumb     = document.getElementById('settings-skipfx-thumb')  as HTMLElement | null;
+  function setSkipFxUI(on: boolean) {
+    if (!skipFxToggleBtn || !skipFxThumb) return;
+    skipFxToggleBtn.setAttribute('aria-checked', String(on));
+    skipFxToggleBtn.style.background  = on ? 'rgba(176,38,255,0.5)' : 'rgba(255,255,255,0.08)';
+    skipFxToggleBtn.style.borderColor = on ? 'rgba(176,38,255,0.7)' : 'rgba(255,255,255,0.12)';
+    skipFxThumb.style.background = on ? '#fff' : '#6b7280';
+    skipFxThumb.style.transform  = on ? 'translateX(16px)' : 'translateX(0)';
+  }
+  setSkipFxUI(localStorage.getItem('skipParticles') === '1');
+  skipFxToggleBtn?.addEventListener('click', () => {
+    const nowOn = skipFxToggleBtn.getAttribute('aria-checked') !== 'true';
+    setSkipFxUI(nowOn);
+    nowOn ? localStorage.setItem('skipParticles', '1') : localStorage.removeItem('skipParticles');
+  });
+
   // Periodic pulse glow on the settings badge
   function pulseBadge() {
     if (!settingsPulse) return;
@@ -349,66 +367,26 @@ import Result from '../components/Result.astro';
   setInterval(pulseBadge, 5000); // pulse every 5 s
   setTimeout(pulseBadge, 1500);  // first pulse on load
 
-  // ── Language toggle ────────────────────────────────────────────────────────
-  const langToggleBtn = document.getElementById('lang-toggle') as HTMLElement | null;
-  const langFlagEl    = document.getElementById('lang-flag')   as HTMLElement | null;
-  const langLabelEl   = document.getElementById('lang-label')  as HTMLElement | null;
-  let currentLang: string = localStorage.getItem('lang') || 'es';
+  // ── i18n (used for settings labels) ────────────────────────────────────────
+  import { t as _t, getLang } from '../i18n/index.ts';
+  const currentLang = getLang();
 
-  function applyLang(lang: string) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-    // Show the OTHER language flag/label so the button reads "switch to X"
-    if (langFlagEl)  langFlagEl.textContent  = lang === 'es' ? '🇬🇧' : '🇪🇸';
-    if (langLabelEl) langLabelEl.textContent = lang === 'es' ? 'English' : 'Español';
-    window.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
-  }
-  langToggleBtn?.addEventListener('click', () => applyLang(currentLang === 'en' ? 'es' : 'en'));
-
-  const CFG_STRINGS: Record<string, Record<string, string>> = {
-    en: {
-      title: 'Settings', volLabel: 'Music volume', resetTitle: 'Reset experience',
-      resetDesc: 'Clears name, choice and answers. Returns to start.', resetBtn: 'Reset',
-      histTitle: 'Session history', histDesc: 'Review your saved recommendations.', histBtn: 'View history',
-      skipTitle: 'Skip animations', skipDesc: 'Go directly to pill choice. Default name: Traveler.',
-      langLabel: 'Language',
-    },
-    es: {
-      title: 'Configuración', volLabel: 'Volumen de música', resetTitle: 'Reiniciar experiencia',
-      resetDesc: 'Borra nombre, elección y respuestas. Vuelves al inicio.', resetBtn: 'Reiniciar',
-      histTitle: 'Historial de sesiones', histDesc: 'Consulta tus recomendaciones guardadas.', histBtn: 'Ver historial',
-      skipTitle: 'Quitar animaciones', skipDesc: 'Va directo a elegir la píldora. Nombre predefinido: Viajero.',
-      langLabel: 'Idioma',
-    },
-  };
-
+  // ── Apply settings panel strings from central i18n ──────────────────────
   function setCfgText(id: string, text: string) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
   }
-
-  function applyCfgLang(lang: string) {
-    const c = CFG_STRINGS[lang] || CFG_STRINGS['en'];
-    setCfgText('cfg-title',      c.title);
-    setCfgText('cfg-vol-label',  c.volLabel);
-    setCfgText('cfg-skip-title', c.skipTitle);
-    setCfgText('cfg-skip-desc',  c.skipDesc);
-    setCfgText('cfg-reset-title', c.resetTitle);
-    setCfgText('cfg-reset-desc', c.resetDesc);
-    setCfgText('cfg-reset-btn',  c.resetBtn);
-    setCfgText('cfg-hist-title', c.histTitle);
-    setCfgText('cfg-hist-desc',  c.histDesc);
-    setCfgText('cfg-hist-btn',   c.histBtn);
-    setCfgText('cfg-lang-label', c.langLabel);
-  }
-
-  // Listen for lang changes to update settings panel
-  window.addEventListener('lang:change', (e: Event) => {
-    applyCfgLang((e as CustomEvent).detail.lang || 'en');
-  });
-
-  // Dispatch on load so components can pick up saved preference
-  setTimeout(() => applyLang(currentLang), 0);
+  setCfgText('cfg-title',       _t(currentLang, 'settings.title'));
+  setCfgText('cfg-vol-label',   _t(currentLang, 'settings.volLabel'));
+  setCfgText('cfg-skip-title',  _t(currentLang, 'settings.skipTitle'));
+  setCfgText('cfg-skip-desc',   _t(currentLang, 'settings.skipDesc'));
+  setCfgText('cfg-reset-title', _t(currentLang, 'settings.resetTitle'));
+  setCfgText('cfg-reset-desc',  _t(currentLang, 'settings.resetDesc'));
+  setCfgText('cfg-reset-btn',   _t(currentLang, 'settings.resetBtn'));
+  setCfgText('cfg-hist-title',  _t(currentLang, 'settings.histTitle'));
+  setCfgText('cfg-hist-desc',   _t(currentLang, 'settings.histDesc'));
+  setCfgText('cfg-hist-btn',      _t(currentLang, 'settings.histBtn'));
+  setCfgText('cfg-skip-fx-label', _t(currentLang, 'settings.skipFxTitle'));
 
   // ── Legal notice panel ──────────────────────────────────────────────────
   const legalBadgeBtn = document.getElementById('legal-badge-btn') as HTMLElement | null;
@@ -480,41 +458,19 @@ import Result from '../components/Result.astro';
     (window as any)['ga-disable-G-1PS7MR6MS2'] = true;
   }
 
-  // Translate cookie + legal UI on lang change
-  const LEGAL_STRINGS: Record<string, Record<string, string>> = {
-    en: {
-      bannerText: 'We use analytics cookies (Google Analytics) to improve the experience. No personal data is stored.',
-      accept: 'Accept', reject: 'Decline',
-      legalTitle: 'Legal Notice', badgeLabel: 'Legal',
-      body: 'Las Píldoras is an open-source project for demonstration purposes. Recommendations are AI-generated and do not replace professional judgment. Images come from public APIs (MyAnimeList, TMDB).',
-      cookiesLabel: 'Cookie Policy', termsLabel: 'Terms of Use', copy: '© 2025 Las Píldoras — Open Source',
-    },
-    es: {
-      bannerText: 'Usamos cookies analíticas (Google Analytics) para mejorar la experiencia. No se almacena información personal.',
-      accept: 'Aceptar', reject: 'Rechazar',
-      legalTitle: 'Aviso Legal', badgeLabel: 'Legal',
-      body: 'Las Píldoras es un proyecto de código abierto creado con fines demostrativos. Las recomendaciones son generadas por IA y no sustituyen criterio profesional. Las imágenes provienen de APIs públicas (MyAnimeList, TMDB).',
-      cookiesLabel: 'Política de Cookies', termsLabel: 'Términos de Uso', copy: '© 2025 Las Píldoras — Open Source',
-    },
-  };
-
-  function applyLegalLang(lang: string) {
-    const s = LEGAL_STRINGS[lang] || LEGAL_STRINGS['en'];
-    const setTxt = (id: string, t: string) => { const el = document.getElementById(id); if (el) el.textContent = t; };
-    setTxt('cookie-banner-text',  s.bannerText);
-    setTxt('cookie-accept-label', s.accept);
-    setTxt('cookie-reject-label', s.reject);
-    setTxt('legal-panel-title',   s.legalTitle);
-    setTxt('legal-badge-label',   s.badgeLabel);
-    setTxt('legal-panel-body',    s.body);
-    setTxt('legal-cookies-label', s.cookiesLabel);
-    setTxt('legal-terms-label',   s.termsLabel);
-    setTxt('legal-copy',          s.copy);
+  // ── Apply legal / cookie strings from central i18n ─────────────────────
+  {
+    const setTxt = (id: string, txt: string) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    setTxt('cookie-banner-text',  _t(currentLang, 'cookies.bannerText'));
+    setTxt('cookie-accept-label', _t(currentLang, 'cookies.accept'));
+    setTxt('cookie-reject-label', _t(currentLang, 'cookies.reject'));
+    setTxt('legal-panel-title',   _t(currentLang, 'legal.title'));
+    setTxt('legal-badge-label',   _t(currentLang, 'legal.badgeLabel'));
+    setTxt('legal-panel-body',    _t(currentLang, 'legal.body'));
+    setTxt('legal-cookies-label', _t(currentLang, 'legal.cookiesLabel'));
+    setTxt('legal-terms-label',   _t(currentLang, 'legal.termsLabel'));
+    setTxt('legal-copy',          _t(currentLang, 'legal.copy'));
   }
-
-  window.addEventListener('lang:change', (e: Event) => {
-    applyLegalLang((e as CustomEvent).detail.lang || 'en');
-  });
 
   // ── Music player (HTML5 Audio, scene-aware) ──────────────────────────────
   const SCENE_TRACKS: Record<string, { name: string; files: string[] }> = {
@@ -525,7 +481,7 @@ import Result from '../components/Result.astro';
     anime_drama: { name: 'Las píldoras – Anime Drama',  files: ['/music/7) Fate - Akira Kosemura.mp3'] },
   };
 
-  const DEFAULT_VOLUME = 0.05; // 0–1 range
+  const DEFAULT_VOLUME = 0.10; // 0–1 range
 
   // Create one Audio element per scene; cycle files on 'ended' for playlists
   const audioPlayers: Record<string, { audio: HTMLAudioElement; files: string[]; idx: number }> = {};

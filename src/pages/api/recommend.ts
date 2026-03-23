@@ -30,6 +30,24 @@ function isValidImageUrl(url: unknown): boolean {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    // Reject non-JSON content types (prevents CSRF-style abuse)
+    const ct = request.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      return new Response(JSON.stringify({ error: 'Unsupported Media Type' }), {
+        status: 415,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Reject oversized payloads before parsing
+    const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+    if (contentLength > 20_000) {
+      return new Response(JSON.stringify({ error: 'Payload too large' }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const body = await request.json();
     const { type, answers, userName } = body as {
       type: 'anime' | 'movie';

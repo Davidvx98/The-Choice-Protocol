@@ -90,6 +90,7 @@
 
 <script>
   import { gsap } from 'gsap';
+  import { t as _t, getLang } from '../i18n/index.ts';
 
   function initPills() {
     const scene = document.getElementById('pills-scene');
@@ -101,41 +102,23 @@
 
     let chosen = false;
 
-      type PillLang = 'en' | 'es';
-    const PILLS_STRINGS: Record<PillLang, {
-      title: string; subtitle: string; or: string;
-      redSub: string; blueSub: string; moviesLabel: string;
-      greeting: (name: string) => string;
-    }> = {
-      es: {
-        title: 'Es hora de elegir tu camino',
-        subtitle: 'Una vez elijas, no hay vuelta atrás...',
-        or: 'ó', redSub: 'Píldora Roja', blueSub: 'Píldora Azul', moviesLabel: 'PELÍCULAS',
-        greeting: (n) => `Bien, ${n}...`,
-      },
-      en: {
-        title: "It's time to choose your path",
-        subtitle: 'Once you choose, there is no going back...',
-        or: 'or', redSub: 'Red Pill', blueSub: 'Blue Pill', moviesLabel: 'MOVIES',
-        greeting: (n) => `Well, ${n}...`,
-      },
-    };
-    function getPillsLang(): PillLang { return (localStorage.getItem('lang') || 'en') as PillLang; }
-    function applyPillsLang(lang: PillLang) {
-      const s = PILLS_STRINGS[lang];
+    const _lang = getLang();
+
+    function applyPillsLang() {
       const titleEl    = document.getElementById('pills-title');
       const subEl      = document.getElementById('pills-subtitle');
       const orEl       = document.getElementById('pills-or-text');
       const redSubEl   = document.getElementById('pills-red-sub');
       const blueSubEl  = document.getElementById('pills-blue-sub');
       const moviesEl   = document.getElementById('pills-movies-label');
-      if (titleEl)   titleEl.textContent   = s.title;
-      if (subEl)     subEl.textContent     = s.subtitle;
-      if (orEl)      orEl.textContent      = s.or;
-      if (redSubEl)  redSubEl.textContent  = s.redSub;
-      if (blueSubEl) blueSubEl.textContent = s.blueSub;
-      if (moviesEl)  moviesEl.textContent  = s.moviesLabel;
+      if (titleEl)   titleEl.textContent   = _t(_lang, 'pills.title');
+      if (subEl)     subEl.textContent     = _t(_lang, 'pills.subtitle');
+      if (orEl)      orEl.textContent      = _t(_lang, 'pills.or');
+      if (redSubEl)  redSubEl.textContent  = _t(_lang, 'pills.redSub');
+      if (blueSubEl) blueSubEl.textContent = _t(_lang, 'pills.blueSub');
+      if (moviesEl)  moviesEl.textContent  = _t(_lang, 'pills.moviesLabel');
     }
+
     let stopRain: (() => void) | undefined;
     function startMatrixRain() {
       const ctx = canvas!.getContext('2d');
@@ -180,25 +163,32 @@
       scene.classList.add('scene-visible');
 
       // Set greeting with name
-      const name = localStorage.getItem('userName') || 'Viajero';
-      greeting!.textContent = PILLS_STRINGS[getPillsLang()].greeting(name);
+      const name = localStorage.getItem('userName') || _t(_lang, 'letter.nameFallback');
+      greeting!.textContent = _t(_lang, 'pills.greeting', { name });
 
-      // Start matrix rain
-      stopRain = startMatrixRain();
-      gsap.to(canvas, { opacity: 1, duration: 1.5 });
+      // Start matrix rain (skip if user opted out of visual effects)
+      if (localStorage.getItem('skipParticles') !== '1') {
+        stopRain = startMatrixRain();
+        gsap.to(canvas, { opacity: 1, duration: 1.5 });
+      }
 
-      // Set initial positions immediately (avoids frame-flash before fromTo kicks in)
-      gsap.set(h2El,     { y: 20, opacity: 0 });
-      gsap.set(greeting, { y: 20, opacity: 0 });
-      gsap.set(pillRed,  { x: -80, opacity: 0 });
-      gsap.set(pillBlue, { x:  80, opacity: 0 });
-
-      // Animate to final positions
-      const tl = gsap.timeline({ delay: 0.5 });
-      tl.to(h2El,     { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' });
-      tl.to(greeting, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, '-=0.3');
-      tl.to(pillRed,  { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.1');
-      tl.to(pillBlue, { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+      // Set positions: skip animations if visual effects disabled
+      if (localStorage.getItem('skipParticles') === '1') {
+        gsap.set(h2El,     { y: 0, opacity: 1 });
+        gsap.set(greeting, { y: 0, opacity: 1 });
+        gsap.set(pillRed,  { x: 0, opacity: 1 });
+        gsap.set(pillBlue, { x: 0, opacity: 1 });
+      } else {
+        gsap.set(h2El,     { y: 20, opacity: 0 });
+        gsap.set(greeting, { y: 20, opacity: 0 });
+        gsap.set(pillRed,  { x: -80, opacity: 0 });
+        gsap.set(pillBlue, { x:  80, opacity: 0 });
+        const tl = gsap.timeline({ delay: 0.5 });
+        tl.to(h2El,     { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' });
+        tl.to(greeting, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, '-=0.3');
+        tl.to(pillRed,  { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.1');
+        tl.to(pillBlue, { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+      }
 
 
     });
@@ -209,10 +199,18 @@
       scene!.dataset.chosen = '1';
       chosen = true;
 
-      // Pantalla completa para mayor inmersión
       document.documentElement.requestFullscreen().catch(() => {});
-
       localStorage.setItem('pillChoice', choice);
+
+      // Skip all animations if visual effects are disabled
+      if (localStorage.getItem('skipParticles') === '1') {
+        scene!.classList.add('scene-hidden');
+        scene!.classList.remove('scene-visible');
+        gsap.set(canvas, { opacity: 0 });
+        if (stopRain) { stopRain(); stopRain = undefined; }
+        window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'pills', to: 'questions' } }));
+        return;
+      }
 
       const selected = choice === 'anime' ? pillRed : pillBlue;
       const other = choice === 'anime' ? pillBlue : pillRed;
@@ -251,11 +249,8 @@
     pillRed.addEventListener('click', () => choosePill('anime'));
     pillBlue.addEventListener('click', () => choosePill('movie'));
 
-    // Apply initial lang + listen for changes
-    applyPillsLang(getPillsLang());
-    window.addEventListener('lang:change', (e: Event) => {
-      applyPillsLang(((e as CustomEvent).detail.lang || 'en') as PillLang);
-    });
+    // Apply lang on init
+    applyPillsLang();
   }
 
   document.addEventListener('astro:page-load', initPills);

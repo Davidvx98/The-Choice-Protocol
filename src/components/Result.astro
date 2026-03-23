@@ -26,28 +26,8 @@
         <h2 id="result-header" class="text-2xl sm:text-3xl font-sans font-bold text-white"></h2>
       </div>
 
-      <!-- ── Carousel ── -->
-      <div id="result-carousel" class="relative" style="overflow:hidden; padding-bottom:52px; min-height:580px;">
-        <!-- Cards sit here, absolutely positioned by GSAP -->
-        <div id="result-cards" class="relative w-full" style="min-height:520px;"></div>
-        <!-- Nav arrows -->
-        <button id="carousel-prev" aria-label="Previous"
-          class="absolute left-0 top-1/2 z-20
-                 w-10 h-10 rounded-full
-                 bg-black/70 border border-white/15 backdrop-blur-md
-                 text-gray-400 hover:text-cyber-purple hover:border-cyber-purple/50
-                 transition-all flex items-center justify-center text-2xl font-extralight select-none"
-          style="transform:translateY(-50%);">&#8249;</button>
-        <button id="carousel-next" aria-label="Next"
-          class="absolute right-0 top-1/2 z-20
-                 w-10 h-10 rounded-full
-                 bg-black/70 border border-white/15 backdrop-blur-md
-                 text-gray-400 hover:text-cyber-purple hover:border-cyber-purple/50
-                 transition-all flex items-center justify-center text-2xl font-extralight select-none"
-          style="transform:translateY(-50%);">&#8250;</button>
-        <!-- Dots -->
-        <div id="carousel-dots" class="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2.5"></div>
-      </div>
+      <!-- ── Cards list ── -->
+      <div id="result-cards" class="space-y-4 w-full"></div>
 
       <div class="flex flex-wrap items-center justify-center gap-4 mt-4">
         <button id="btn-retry" class="btn-cyber text-cyber-purple">🔄 <span id="btn-retry-label">Try again</span></button>
@@ -81,42 +61,7 @@
 
   const HISTORY_KEY = 'recommendationHistory';
 
-  // ── i18n ──────────────────────────────────────────────────────────────────────
-  type Lang = 'en' | 'es';
-  const STRINGS: Record<Lang, {
-    loading: string[]; loadingSub: string; label: string;
-    header: (n: string) => string; ranks: string[];
-    retry: string; history: string; noResults: string; trailer: string;
-    translating: string; histLabel: string; histTitle: string;
-    histEmpty: string; histClose: string; typeAnime: string; typeMovies: string;
-  }> = {
-    en: {
-      loading: ['Consulting the oracle...', 'Analyzing your answers...', 'Searching parallel dimensions...', 'Finding perfect options...', 'Almost ready...'],
-      loadingSub: 'Analyzing your answers with AI',
-      label: 'Your recommendations',
-      header: (n) => `For you, ${n}`,
-      ranks: ['Main recommendation', 'Second option', 'Third option'],
-      retry: 'Try again', history: 'View history',
-      noResults: "Couldn't generate recommendations. Try again.",
-      trailer: '🎬 Watch trailer', translating: 'Translating...',
-      histLabel: 'Saved sessions', histTitle: 'History',
-      histEmpty: 'No recommendations saved yet.\nComplete the flow to create your first entry.',
-      histClose: '✕ Close', typeAnime: '🔴 Anime', typeMovies: '🔵 Movies',
-    },
-    es: {
-      loading: ['Consultando el oráculo...', 'Analizando tus respuestas...', 'Buscando en dimensiones paralelas...', 'Encontrando las opciones perfectas...', 'Casi listo...'],
-      loadingSub: 'Analizando tus respuestas con IA',
-      label: 'Tus recomendaciones',
-      header: (n) => `Para ti, ${n}`,
-      ranks: ['Recomendación principal', 'Segunda opción', 'Tercera opción'],
-      retry: 'Intentar de nuevo', history: 'Ver historial',
-      noResults: 'No pudimos generar recomendaciones. Intenta de nuevo.',
-      trailer: '🎬 Ver trailer', translating: 'Traduciendo...',
-      histLabel: 'Sesiones guardadas', histTitle: 'Historial',
-      histEmpty: 'Aún no hay recomendaciones guardadas.\nCompleta el flujo para crear tu primera entrada.',
-      histClose: '✕ Cerrar', typeAnime: '🔴 Anime', typeMovies: '🔵 Películas',
-    },
-  };
+  import { t as _t, ta, to, getLang } from '../i18n/index.ts';
 
   function esc(s: unknown): string {
     const str = s == null ? '' : String(s);
@@ -134,9 +79,6 @@
     const headerEl      = document.getElementById('result-header');
     const resultLabel   = document.getElementById('result-label');
     const cardsEl       = document.getElementById('result-cards');
-    const prevBtn       = document.getElementById('carousel-prev');
-    const nextBtn       = document.getElementById('carousel-next');
-    const dotsEl        = document.getElementById('carousel-dots');
     const historyPanel  = document.getElementById('history-panel');
     const btnCloseHist  = document.getElementById('btn-close-history');
     const historyList   = document.getElementById('history-list');
@@ -149,29 +91,29 @@
 
     if (!scene || !loading || !content) return;
 
+    const _lang = getLang();
+    const _loadingMsgs = ta<string>(_lang, 'result.loading');
+    const _genreMap = to<Record<string, string>>(_lang, 'result.genreMap');
+
     // ── State ────────────────────────────────────────────────────────────────────
-    let lang: Lang = (localStorage.getItem('lang') || 'en') as Lang;
     let currentRecs: any[] = [];
     let _currentName = '';
     let _currentType = '';
-    let activeIdx = 0;
     let cards: HTMLElement[] = [];
-    let autoTimer: ReturnType<typeof setInterval> | null = null;
     const translationCache = new Map<string, string>();
 
-    const s = () => STRINGS[lang];
+    const s = () => ({ translating: _t(_lang, 'result.translating') });
 
     // ── Static strings ────────────────────────────────────────────────────────────
     function updateStaticStrings() {
-      const str = s();
-      if (resultLabel)   resultLabel.textContent  = str.label;
-      if (retryLabel)    retryLabel.textContent    = str.retry;
-      if (histLabel)     histLabel.textContent     = str.history;
-      if (loadingSub)    loadingSub.textContent    = str.loadingSub;
-      if (histLabelText) histLabelText.textContent = str.histLabel;
-      if (histTitleText) histTitleText.textContent = str.histTitle;
-      if (histCloseText) histCloseText.textContent = str.histClose;
-      if (historyEmpty)  historyEmpty.innerHTML    = str.histEmpty.replace('\n', '<br/>');
+      if (resultLabel)   resultLabel.textContent  = _t(_lang, 'result.label');
+      if (retryLabel)    retryLabel.textContent    = _t(_lang, 'result.retry');
+      if (histLabel)     histLabel.textContent     = _t(_lang, 'result.history');
+      if (loadingSub)    loadingSub.textContent    = _t(_lang, 'result.loadingSub');
+      if (histLabelText) histLabelText.textContent = _t(_lang, 'result.histLabel');
+      if (histTitleText) histTitleText.textContent = _t(_lang, 'result.histTitle');
+      if (histCloseText) histCloseText.textContent = _t(_lang, 'result.histClose');
+      if (historyEmpty)  historyEmpty.innerHTML    = _t(_lang, 'result.histEmpty').replace('\n', '<br/>');
     }
 
     // ── Translation ───────────────────────────────────────────────────────────────
@@ -202,13 +144,13 @@
       const tasks = [
         ...descEls.map(el => async () => {
           const orig = el.getAttribute('data-orig-desc') || '';
-          if (lang === 'es') { el.textContent = orig; return; }
+          if (_lang === 'es') { el.textContent = orig; return; }
           el.textContent = s().translating;
           el.textContent = await translateText(orig, 'en');
         }),
         ...justEls.map(el => async () => {
           const orig = el.getAttribute('data-orig-just') || '';
-          if (lang === 'es') { el.textContent = orig; return; }
+          if (_lang === 'es') { el.textContent = orig; return; }
           el.textContent = s().translating;
           el.textContent = await translateText(orig, 'en');
         }),
@@ -217,103 +159,19 @@
       await Promise.all(tasks.map(t => t()));
     }
 
-    // ── Carousel ──────────────────────────────────────────────────────────────────
-    // Positions: 0=center, 1=right-side, 2=left-side
-    const CAROUSEL_POS = [
-      { x: '0%',    scale: 1,    opacity: 1,    zIndex: 10 },
-      { x: '80%',   scale: 0.76, opacity: 0.35, zIndex: 5  },
-      { x: '-80%',  scale: 0.76, opacity: 0.35, zIndex: 5  },
-    ];
-
-    function getSlot(cardIdx: number): number {
-      if (cardIdx === activeIdx)                        return 0; // center
-      if (cardIdx === (activeIdx + 1) % cards.length)  return 1; // right
-      return 2;                                                    // left
-    }
-
-    function applyPositions(animated: boolean) {
-      cards.forEach((card, i) => {
-        const pos = CAROUSEL_POS[getSlot(i)];
-        if (animated) {
-          gsap.to(card, { ...pos, duration: 0.55, ease: 'power3.inOut', overwrite: true });
-        } else {
-          gsap.set(card, pos);
-        }
-      });
-      updateDots();
-      syncContainerHeight();
-    }
-
-    function syncContainerHeight() {
-      if (!cardsEl || !cards[activeIdx]) return;
-      requestAnimationFrame(() => {
-        const h = (cards[activeIdx] as HTMLElement).scrollHeight;
-        if (h > 10 && cardsEl) cardsEl.style.minHeight = h + 'px';
-      });
-    }
-
-    function updateDots() {
-      if (!dotsEl) return;
-      dotsEl.innerHTML = '';
-      cards.forEach((_, i) => {
-        const dot = document.createElement('button');
-        dot.className = 'w-2 h-2 rounded-full transition-all duration-300 ' +
-          (i === activeIdx ? 'bg-cyber-purple scale-125' : 'bg-white/20 hover:bg-white/40');
-        dot.setAttribute('aria-label', `Card ${i + 1}`);
-        dot.addEventListener('click', () => goTo(i));
-        dotsEl.appendChild(dot);
-      });
-    }
-
-    function goTo(newIdx: number) {
-      if (newIdx === activeIdx || cards.length < 2) return;
-      clearAutoAdvance();
-      activeIdx = newIdx;
-      applyPositions(true);
-      setTimeout(syncContainerHeight, 600);
-      startAutoAdvance();
-    }
-
-    function startAutoAdvance() {
-      if (cards.length < 2) return;
-      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 30000);
-    }
-
-    function clearAutoAdvance() {
-      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-    }
-
-    prevBtn?.addEventListener('click', () => goTo((activeIdx - 1 + cards.length) % cards.length));
-    nextBtn?.addEventListener('click', () => goTo((activeIdx + 1) % cards.length));
-
     // ── Genre translation ──────────────────────────────────────────────────────────
-    const GENRE_MAP_ES: Record<string, string> = {
-      'Action': 'Acción', 'Adventure': 'Aventura', 'Comedy': 'Comedia',
-      'Drama': 'Drama', 'Fantasy': 'Fantasía', 'Horror': 'Terror',
-      'Mystery': 'Misterio', 'Romance': 'Romance', 'Sci-Fi': 'Ciencia Ficción',
-      'Science Fiction': 'Ciencia Ficción', 'Thriller': 'Thriller',
-      'Slice of Life': 'Slice of Life', 'Suspense': 'Suspenso',
-      'Supernatural': 'Sobrenatural', 'Sports': 'Deportes', 'Music': 'Música',
-      'Documentary': 'Documental', 'Animation': 'Animación', 'Family': 'Familiar',
-      'History': 'Historia', 'War': 'Guerra', 'Western': 'Western',
-      'Crime': 'Crimen', 'Ecchi': 'Ecchi', 'Isekai': 'Isekai',
-      'Mecha': 'Mecha', 'Psychological': 'Psicológico', 'School': 'Escolar',
-    };
-
     function translateGenre(g: string): string {
-      if (lang === 'es') return GENRE_MAP_ES[g] || g;
-      return g;
+      return _genreMap[g] || g;
     }
 
     // ── Build card ─────────────────────────────────────────────────────────────────
     function buildCard(rec: any, idx: number): HTMLElement {
-      const str = s();
       const isPrimary = idx === 0;
       const card = document.createElement('div');
-      card.className = 'rounded-2xl border backdrop-blur-md p-6 sm:p-8 absolute w-[92%]';
+      card.className = 'rounded-2xl border backdrop-blur-md p-6 sm:p-8 w-full';
       card.style.cssText = isPrimary
-        ? 'left:4%;top:0;border-color:rgba(176,38,255,0.5);background:rgba(176,38,255,0.06);box-shadow:0 0 50px rgba(176,38,255,0.15);'
-        : 'left:4%;top:0;border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);';
+        ? 'border-color:rgba(176,38,255,0.5);background:rgba(176,38,255,0.06);box-shadow:0 0 50px rgba(176,38,255,0.15);'
+        : 'border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);';
 
       const imageHtml = rec.image
         ? `<img src="${esc(rec.image)}" alt="${esc(rec.title)}"
@@ -337,7 +195,7 @@
              >${esc(translateGenre(g))}</span>`).join('')}</div>` : '';
 
       const trailerHref = 'https://www.youtube.com/results?search_query=' + encodeURIComponent((rec.title || '') + ' trailer');
-      const rankLabel = str.ranks[Math.min(idx, 2)];
+      const rankLabel = _t(_lang, 'result.ranks.' + Math.min(idx, 2));
       const rankOpacity = isPrimary ? '0.9' : '0.4';
 
       card.innerHTML = `
@@ -357,7 +215,7 @@
                data-orig-desc="${esc(rec.description || '')}">${esc(rec.description || '')}</p>
             <a href="${trailerHref}" target="_blank" rel="noopener noreferrer"
                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-mono border transition-all duration-200"
-               style="border-color:rgba(0,212,255,0.3);color:rgba(0,212,255,0.7);">${str.trailer}</a>
+               style="border-color:rgba(0,212,255,0.3);color:rgba(0,212,255,0.7);">${_t(_lang, 'result.trailer')}</a>
           </div>
         </div>
         ${rec.justification ? `
@@ -380,29 +238,21 @@
       _currentType = type;
 
       updateStaticStrings();
-      const str = s();
-      if (headerEl) headerEl.textContent = str.header(name);
+      if (headerEl) headerEl.textContent = _t(_lang, 'result.header', { name });
 
-      clearAutoAdvance();
-      activeIdx = 0;
       cards = [];
 
       if (cardsEl) {
         cardsEl.innerHTML = '';
         if (!currentRecs.length) {
-          cardsEl.innerHTML = `<div class="rounded-2xl border border-white/10 p-8 text-center text-gray-400 font-mono"
-                                    style="position:absolute;width:100%;">${str.noResults}</div>`;
+          cardsEl.innerHTML = `<div class="rounded-2xl border border-white/10 p-8 text-center text-gray-400 font-mono">${_t(_lang, 'result.noResults')}</div>`;
         } else {
           currentRecs.forEach((rec, idx) => {
             const card = buildCard(rec, idx);
             cardsEl.appendChild(card);
             cards.push(card);
+            gsap.from(card, { y: 20, opacity: 0, duration: 0.4, delay: 0.1 * idx, ease: 'power2.out' });
           });
-          applyPositions(false);
-          // Entrance animation for center card
-          gsap.from(cards[0], { y: 30, opacity: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
-          setTimeout(syncContainerHeight, 200);
-          startAutoAdvance();
           saveToHistory(currentRecs, name, type);
         }
       }
@@ -444,10 +294,7 @@
         `;
         document.body.appendChild(toast);
       }
-      const msg = (localStorage.getItem('lang') || 'en') === 'es'
-        ? '✓ Guardado en historial'
-        : '✓ Saved to history';
-      toast.textContent = msg;
+      toast.textContent = _t(_lang, 'result.histSaved');
       toast.style.opacity = '1';
       setTimeout(() => { if (toast) toast.style.opacity = '0'; }, 2500);
     }
@@ -458,7 +305,7 @@
       historyList.innerHTML = '';
       if (!hist.length) { historyEmpty.classList.remove('hidden'); return; }
       historyEmpty.classList.add('hidden');
-      const str = s();
+      const str = { typeAnime: _t(_lang, 'result.typeAnime'), typeMovies: _t(_lang, 'result.typeMovies'), trailer: _t(_lang, 'result.trailer') };
 
       hist.forEach((entry: any, ei: number) => {
         const typeLabel = entry.type === 'anime' ? str.typeAnime : str.typeMovies;
@@ -529,23 +376,22 @@
     async function fetchRecommendation() {
       const choice  = localStorage.getItem('pillChoice') || 'anime';
       const answers = safeParseJSON(localStorage.getItem('userAnswers'), {});
-      const name    = localStorage.getItem('userName') || 'Traveler';
-      const str     = s();
+      const name    = localStorage.getItem('userName') || _t(_lang, 'letter.nameFallback');
 
       let msgIdx = 0;
       const msgInterval = setInterval(() => {
-        msgIdx = (msgIdx + 1) % str.loading.length;
+        msgIdx = (msgIdx + 1) % _loadingMsgs.length;
         if (loadingText) {
           gsap.to(loadingText, {
             opacity: 0, duration: 0.2,
             onComplete: () => {
-              loadingText.textContent = str.loading[msgIdx];
+              loadingText.textContent = _loadingMsgs[msgIdx];
               gsap.to(loadingText, { opacity: 1, duration: 0.2 });
             },
           });
         }
       }, 2000);
-      if (loadingText) loadingText.textContent = str.loading[0];
+      if (loadingText) loadingText.textContent = _loadingMsgs[0];
 
       try {
         const controller = new AbortController();
@@ -570,7 +416,6 @@
 
     // ── Wiring ─────────────────────────────────────────────────────────────────────
     btnRetry?.addEventListener('click', () => {
-      clearAutoAdvance();
       gsap.to(scene, {
         opacity: 0, duration: 0.5,
         onComplete: () => {
@@ -585,26 +430,7 @@
     btnCloseHist?.addEventListener('click', closeHistory);
     window.addEventListener('history:open', openHistory);
 
-    // Language change — rebuild cards + re-translate
-    window.addEventListener('lang:change', (e: Event) => {
-      lang = ((e as CustomEvent).detail.lang || 'en') as Lang;
-      updateStaticStrings();
-      if (currentRecs.length > 0 && cardsEl) {
-        clearAutoAdvance();
-        cards = [];
-        cardsEl.innerHTML = '';
-        currentRecs.forEach((rec, idx) => {
-          const card = buildCard(rec, idx);
-          cardsEl.appendChild(card);
-          cards.push(card);
-        });
-        // Restore active card position
-        activeIdx = Math.min(activeIdx, cards.length - 1);
-        applyPositions(false);
-        startAutoAdvance();
-        refreshDescriptions();
-      }
-    });
+    // Language change handled via page reload (setLang() calls location.reload())
 
     window.addEventListener('scene:advance', (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -612,8 +438,6 @@
 
       loading!.classList.remove('hidden');
       content!.classList.add('hidden');
-      clearAutoAdvance();
-      activeIdx = 0;
       cards = [];
       if (cardsEl) cardsEl.innerHTML = '';
 
