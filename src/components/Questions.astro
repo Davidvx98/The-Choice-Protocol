@@ -459,6 +459,7 @@
         const val = btn.dataset.value ?? '';
         if (blocked.includes(val)) {
           btn.disabled = true;
+          btn.dataset.moodBlocked = 'true';   // marker so updateConflictStates skips it
           btn.style.opacity       = '0.18';
           btn.style.transform     = 'scale(0.95)';
           btn.style.filter        = 'grayscale(0.8)';
@@ -594,7 +595,7 @@
           btn.style.filter        = 'grayscale(0.7)';
           btn.style.cursor        = 'not-allowed';
           btn.style.pointerEvents = 'none';
-        } else if (!isSelected) {
+        } else if (!isSelected && !btn.dataset.moodBlocked) {
           btn.style.opacity       = '1';
           btn.style.transform     = 'scale(1)';
           btn.style.filter        = '';
