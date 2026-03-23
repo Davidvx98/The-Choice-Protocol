@@ -4,8 +4,8 @@
  */
 ---
 
-<div id="result-scene" class="scene scene-hidden" role="region" aria-label="Resultados y recomendaciones" style="overflow-y:auto;align-items:flex-start;">
-  <div class="max-w-4xl w-full mx-auto px-4 py-10">
+<div id="result-scene" class="scene scene-hidden" role="region" aria-label="Resultados y recomendaciones" style="overflow-y:auto;flex-direction:column;">
+  <div class="max-w-4xl w-full mx-auto px-4 py-10" style="margin:auto;">
 
     <!-- Loading -->
     <div id="result-loading" class="flex flex-col items-center gap-6 py-20">
@@ -276,7 +276,7 @@
 
     function startAutoAdvance() {
       if (cards.length < 2) return;
-      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 10000);
+      autoTimer = setInterval(() => { goTo((activeIdx + 1) % cards.length); }, 30000);
     }
 
     function clearAutoAdvance() {
@@ -310,10 +310,10 @@
       const str = s();
       const isPrimary = idx === 0;
       const card = document.createElement('div');
-      card.className = 'rounded-2xl border backdrop-blur-md p-5 sm:p-6 absolute w-5/6 sm:w-4/5';
+      card.className = 'rounded-2xl border backdrop-blur-md p-5 sm:p-6 absolute w-4/5';
       card.style.cssText = isPrimary
-        ? 'left:8.33%;top:0;border-color:rgba(176,38,255,0.5);background:rgba(176,38,255,0.06);box-shadow:0 0 50px rgba(176,38,255,0.15);'
-        : 'left:8.33%;top:0;border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);';
+        ? 'left:10%;top:0;border-color:rgba(176,38,255,0.5);background:rgba(176,38,255,0.06);box-shadow:0 0 50px rgba(176,38,255,0.15);'
+        : 'left:10%;top:0;border-color:rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);';
 
       const imageHtml = rec.image
         ? `<img src="${esc(rec.image)}" alt="${esc(rec.title)}"
@@ -422,6 +422,34 @@
         name, type, recommendations: recs,
       });
       localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, 10)));
+      showHistoryToast();
+    }
+
+    function showHistoryToast() {
+      let toast = document.getElementById('history-saved-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'history-saved-toast';
+        toast.style.cssText = `
+          position:fixed;bottom:5rem;right:1.5rem;z-index:200;
+          display:flex;align-items:center;gap:.5rem;
+          padding:.6rem 1rem;border-radius:.75rem;
+          background:rgba(10,10,15,.9);
+          border:1px solid rgba(176,38,255,.35);
+          color:rgba(176,38,255,.9);
+          font-family:monospace;font-size:.75rem;
+          backdrop-filter:blur(8px);
+          pointer-events:none;opacity:0;
+          transition:opacity .3s ease;
+        `;
+        document.body.appendChild(toast);
+      }
+      const msg = (localStorage.getItem('lang') || 'en') === 'es'
+        ? '✓ Guardado en historial'
+        : '✓ Saved to history';
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      setTimeout(() => { if (toast) toast.style.opacity = '0'; }, 2500);
     }
 
     function renderHistoryPanel() {

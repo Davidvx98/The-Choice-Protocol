@@ -80,9 +80,9 @@ import Result from '../components/Result.astro';
             <label for="settings-vol" class="text-gray-400 text-xs font-mono flex items-center gap-1.5">
               🔊 <span id="cfg-vol-label">Music volume</span>
             </label>
-            <span id="settings-vol-pct" class="text-cyber-purple text-xs font-mono">15%</span>
+            <span id="settings-vol-pct" class="text-cyber-purple text-xs font-mono">5%</span>
           </div>
-          <input id="settings-vol" type="range" min="0" max="1" step="0.05" value="0.15"
+          <input id="settings-vol" type="range" min="0" max="1" step="0.05" value="0.05"
             class="w-full accent-cyber-purple cursor-pointer h-1" aria-label="Volume" />
         </div>
 
@@ -142,6 +142,11 @@ import Result from '../components/Result.astro';
       <p>Géneros de anime disponibles: Acción, Romance, Misterio, Comedia, Ciencia Ficción, Fantasía, Terror, Deportes, Slice of Life, Isekai, Mecha, Psicológico.</p>
       <p>Géneros de películas disponibles: Acción, Aventura, Drama, Romance, Terror, Suspense, Comedia, Ciencia Ficción, Thriller, Crimen, Animación, Documental.</p>
       <p>&copy; 2025 Las Píldoras — The Choice Protocol. Proyecto open source.</p>
+      <nav aria-label="Legal">
+        <a href="/politica-cookies">Política de Cookies</a> ·
+        <a href="/terminos">Términos y Condiciones</a> ·
+        <a href="/aviso-legal">Aviso Legal</a>
+      </nav>
     </div>
   </footer>
 </Layout>
@@ -335,7 +340,7 @@ import Result from '../components/Result.astro';
     anime_drama: { name: 'Las píldoras – Anime Drama',  files: ['/music/7) Fate - Akira Kosemura.mp3'] },
   };
 
-  const DEFAULT_VOLUME = 0.15; // 0–1 range
+  const DEFAULT_VOLUME = 0.05; // 0–1 range
 
   // Create one Audio element per scene; cycle files on 'ended' for playlists
   const audioPlayers: Record<string, { audio: HTMLAudioElement; files: string[]; idx: number }> = {};

@@ -6,6 +6,7 @@ import { defineMiddleware } from 'astro:middleware';
 // ── Simple in-memory rate limiter ────────────────────────────────────────────
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 const RATE_WINDOW_MS = 60_000; // 1 minute
+const MAX_BUCKETS = 10_000;   // cap memory: ~1 MB at worst
 const RATE_LIMITS: Record<string, number> = {
   '/api/recommend':  8,
   '/api/translate':  15,
@@ -39,6 +40,11 @@ function checkRateLimit(ip: string, pathname: string): boolean {
   const bucket = rateBuckets.get(key);
 
   if (!bucket || now > bucket.resetAt) {
+    // Evict oldest entry if at capacity to prevent memory growth
+    if (!bucket && rateBuckets.size >= MAX_BUCKETS) {
+      const oldestKey = rateBuckets.keys().next().value;
+      if (oldestKey) rateBuckets.delete(oldestKey);
+    }
     rateBuckets.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
     return true;
   }
@@ -55,7 +61,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy':          'strict-origin-when-cross-origin',
   'Permissions-Policy':       'camera=(), microphone=(), geolocation=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://cdn.myanimelist.net https://image.tmdb.org; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cloudflareinsights.com; frame-src 'none'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
+  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://cdn.myanimelist.net https://*.myanimelist.net https://image.tmdb.org https://i.ytimg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cloudflareinsights.com; frame-src 'none'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
 };
 
 export const onRequest = defineMiddleware(async ({ request, url }, next) => {

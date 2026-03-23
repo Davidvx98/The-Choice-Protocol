@@ -1,11 +1,12 @@
 /**
  * POST /api/translate
- * Traduce texto usando Gemini Flash
+ * Traduce texto usando Groq (preferido) con fallback a Gemini
  */
 import type { APIRoute } from 'astro';
+import { translateWithGroq } from '../../lib/groq';
 import { translateWithGemini } from '../../lib/gemini';
 
-const VALID_LANGS = ['es', 'en', 'zh'];
+const VALID_LANGS = ['es', 'en'];
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -33,7 +34,8 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const translated = await translateWithGemini(text, targetLang);
+    // Groq primero (más rápido y cuota más generosa), Gemini como fallback
+    const translated = (await translateWithGroq(text, targetLang)) ?? (await translateWithGemini(text, targetLang));
 
     if (!translated) {
       return new Response(JSON.stringify({ error: 'Translation failed' }), {

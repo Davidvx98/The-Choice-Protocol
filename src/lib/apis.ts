@@ -101,13 +101,12 @@ export async function searchMovies(params: {
   yearRange?: [number, number];
   limit?: number;
 }): Promise<MovieResult[]> {
-  const TMDB_KEY = (process.env.TMDB_API_KEY || import.meta.env.TMDB_API_KEY || '').trim();
-  if (!TMDB_KEY) throw new Error('TMDB_API_KEY not set');
+  const TMDB_TOKEN = (process.env.TMDB_ACCESS_TOKEN || import.meta.env.TMDB_ACCESS_TOKEN || '').trim();
+  if (!TMDB_TOKEN) throw new Error('TMDB_ACCESS_TOKEN not set');
 
   const { genres = [], minScore = 6, yearRange, limit = 10 } = params;
 
   const query = new URLSearchParams({
-    api_key: TMDB_KEY,
     language: 'es-ES',
     sort_by: 'vote_average.desc',
     'vote_average.gte': String(minScore),
@@ -128,7 +127,10 @@ export async function searchMovies(params: {
   const timeout = setTimeout(() => controller.abort(), 15_000);
   let res: Response;
   try {
-    res = await fetch(`${TMDB_BASE}/discover/movie?${query}`, { signal: controller.signal });
+    res = await fetch(`${TMDB_BASE}/discover/movie?${query}`, {
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+    });
   } finally {
     clearTimeout(timeout);
   }
@@ -171,15 +173,18 @@ export async function fetchAnimeImage(title: string): Promise<string> {
 }
 
 export async function fetchMovieImage(title: string): Promise<string> {
-  const TMDB_KEY = (process.env.TMDB_API_KEY || import.meta.env.TMDB_API_KEY || '').trim();
-  if (!TMDB_KEY) return '';
+  const TMDB_TOKEN = (process.env.TMDB_ACCESS_TOKEN || import.meta.env.TMDB_ACCESS_TOKEN || '').trim();
+  if (!TMDB_TOKEN) return '';
   try {
-    const query = new URLSearchParams({ api_key: TMDB_KEY, query: title, page: '1', include_adult: 'false', language: 'es-ES' });
+    const query = new URLSearchParams({ query: title, page: '1', include_adult: 'false', language: 'es-ES' });
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     let res: Response;
     try {
-      res = await fetch(`${TMDB_BASE}/search/movie?${query}`, { signal: controller.signal });
+      res = await fetch(`${TMDB_BASE}/search/movie?${query}`, {
+        signal: controller.signal,
+        headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+      });
     } finally {
       clearTimeout(timeout);
     }

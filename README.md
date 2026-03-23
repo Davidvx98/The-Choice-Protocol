@@ -11,7 +11,13 @@ Descubre qué ver hoy a través de un viaje cinematográfico único
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![GSAP](https://img.shields.io/badge/GSAP-3.x-88CE02?style=flat-square&logo=greensock&logoColor=white)](https://gsap.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
-[![Deployed on teampoza](https://img.shields.io/badge/Deployed%20on-teampoza.dev-6C47FF?style=flat-square)](https://the-choice-protocol.teampoza.dev)
+[![Deployed on CubePath](https://img.shields.io/badge/Deployed%20on-CubePath-6C47FF?style=flat-square)](https://the-choice-protocol.teampoza.dev)
+[![Hackatón CubePath 2026](https://img.shields.io/badge/🏆_Hackatón-CubePath_2026-FFD700?style=flat-square)](https://midu.link/cubepath)
+
+---
+
+> 🏆 **Proyecto presentado a la [Hackatón CubePath 2026](https://midu.link/cubepath)**  
+> Fecha límite: **31 de marzo de 2026 · 23:59:59 CET**
 
 ---
 
@@ -43,6 +49,30 @@ Inspirada en la escena de las píldoras de *Matrix*, cada sesión es un viaje ú
 
 ---
 
+## 🏆 Hackatón CubePath 2026
+
+Este proyecto ha sido creado y desplegado en **[CubePath](https://midu.link/cubepath)** para la **Hackatón CubePath 2026**.
+
+### 🎁 Premios
+
+| 🏆 Posición | 💰 Amazon | 💸 PayPal | 🎓 midu.dev |
+|:-----------:|:---------:|:---------:|:-----------:|
+| 🥇 1er Premio | 500 $ | 150 $ | 1 año |
+| 🥈 2º Premio | 300 $ | 100 $ | 3 meses |
+| 🥉 3er Premio | 200 $ | 50 $ | 1 mes |
+
+> 💰 Más de **1.300 $** en premios totales entre tarjetas regalo de Amazon, PayPal y suscripciones a midu.dev
+
+### 📅 Fechas clave
+
+| 📌 Evento | 📅 Fecha | ⏰ Hora |
+|-----------|----------|--------|
+| ✅ Inicio | 18 de marzo de 2026 | — |
+| 🔴 Fecha límite | 31 de marzo de 2026 | 23:59:59 CET |
+| 🗳️ Votaciones en directo | 1 de abril de 2026 | 18:00 CET |
+
+---
+
 ## 🎬 Capturas del flujo
 
 | Escena del Sobre | Elección de Píldoras | Resultado con IA |
@@ -59,12 +89,12 @@ Inspirada en la escena de las píldoras de *Matrix*, cada sesión es un viaje ú
 |---------|-------------|
 | 🎭 **Narrativa interactiva** | Flujo de escenas cinematográficas en lugar de formularios |
 | 💊 **Elección binaria** | Anime (píldora roja) o Películas (píldora azul) |
-| 🤖 **IA con Gemini 2.5 Flash** | Recomendaciones personalizadas con justificación |
-| 🔄 **Fallback inteligente** | Si la IA no responde → recomendación desde APIs directamente |
-| 🌐 **Multiidioma** | Traduce tu recomendación a Español, Inglés o Chino |
+| 🤖 **IA con Gemini + Groq** | Recomendaciones personalizadas con fallback automático entre proveedores |
+| 🔄 **Fallback inteligente** | Gemini → Groq → resultado directo desde las APIs |
+| 🌐 **Multiidioma** | Interfaz y traducciones en Español e Inglés |
 | 🎨 **Animaciones GSAP** | Transiciones fluidas, efectos de partículas, lluvia Matrix |
 | 📱 **Responsive** | Experiencia adaptada a móvil y escritorio |
-| 🎵 **Música contextual** | Banda sonora adaptada a cada escena via YouTube API |
+| 🎵 **Música contextual** | Banda sonora adaptada a cada escena |
 
 ---
 
@@ -83,6 +113,7 @@ Este proyecto está desplegado en **[CubePath](https://midu.link/cubepath)** usa
 ```env
 # Variables de entorno en CubePath
 GEMINI_API_KEY=tu_clave_gemini
+GROQ_API_KEY=tu_clave_groq
 TMDB_API_KEY=tu_clave_tmdb
 SITE_URL=https://the-choice-protocol.teampoza.dev
 NODE_ENV=production
@@ -146,6 +177,7 @@ Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 GEMINI_API_KEY=tu_clave_de_gemini_aqui
+GROQ_API_KEY=tu_clave_de_groq_aqui
 TMDB_API_KEY=tu_clave_de_tmdb_aqui
 SITE_URL=http://localhost:4321
 ```
@@ -153,10 +185,11 @@ SITE_URL=http://localhost:4321
 | API | Dónde obtenerla | Gratuita |
 |-----|-----------------|----------|
 | **Gemini 2.5 Flash** | [Google AI Studio](https://aistudio.google.com/apikey) | ✅ Sí |
+| **Groq (Llama 3.3)** | [console.groq.com/keys](https://console.groq.com/keys) | ✅ Sí |
 | **TMDB** | [TMDB Settings](https://www.themoviedb.org/settings/api) | ✅ Sí |
 | **Jikan** | No requiere key | ✅ Sí |
 
-> ⚠️ **Jikan** (API de MyAnimeList) no requiere autenticación.
+> ⚠️ **Groq** se usa como fallback de IA cuando Gemini supera su cuota. **Jikan** (API de MyAnimeList) no requiere autenticación.
 
 ---
 
@@ -219,7 +252,8 @@ The-Choice-Protocol/
 - **[TypeScript 5](https://www.typescriptlang.org)** — Tipado estático
 
 ### APIs e IA
-- **[Gemini 2.5 Flash](https://ai.google.dev/)** — IA de Google (capa gratuita)
+- **[Gemini 2.5 Flash](https://ai.google.dev/)** — IA principal de Google (capa gratuita)
+- **[Groq (Llama 3.3)](https://console.groq.com/)** — IA de fallback ultrarrápida (capa gratuita)
 - **[Jikan API](https://jikan.moe/)** — API no oficial de MyAnimeList
 - **[TMDB API](https://developer.themoviedb.org/)** — The Movie Database
 
@@ -282,7 +316,7 @@ Distribuido bajo la licencia **MIT**. Ver [LICENSE](./LICENSE) para más informa
 
 <div align="center">
 
-Hecho con 💜 para la Hackathon **Las Píldoras** · Desplegado en **[CubePath](https://midu.link/cubepath)**
+Hecho con 💜 para la **[Hackatón CubePath 2026](https://midu.link/cubepath)** · Desplegado en **[CubePath](https://midu.link/cubepath)**
 
 *"La pregunta no es qué ver. La pregunta es quién eres."*
 

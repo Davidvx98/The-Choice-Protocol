@@ -4,11 +4,12 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { askGroqSafe, isGroqAvailable } from './groq';
 
 const API_KEY = (process.env.GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || '').trim();
 const MODELS   = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
-const TIMEOUT_MS = 25_000;
-const MAX_RETRIES = 2;
+const TIMEOUT_MS = 5_000;  // 5s: si no responde, Groq toma el relevo inmediatamente
+const MAX_RETRIES = 1;     // Sin reintentos en el mismo modelo lento
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -80,15 +81,31 @@ export async function askGemini(prompt: string): Promise<string> {
 }
 
 /**
- * Wrapper con fallback: intenta Gemini, si falla devuelve null
+ * Wrapper con fallback: intenta Gemini → Groq → null
  */
 export async function askGeminiSafe(prompt: string): Promise<string | null> {
   try {
     return await askGemini(prompt);
   } catch (err) {
-    console.error('[Gemini] Error:', (err as Error).message);
-    return null;
+    const msg = (err as Error).message || '';
+    if (msg.includes('quota') || msg.includes('429')) {
+      console.warn('[Gemini] Cuota agotada - intentando Groq como fallback...');
+    } else {
+      console.error('[Gemini] Error:', msg);
+    }
   }
+
+  // Fallback a Groq si está configurado
+  if (isGroqAvailable()) {
+    const groqResult = await askGroqSafe(prompt);
+    if (groqResult) {
+      console.log('[Groq] Respuesta obtenida desde Groq');
+      return groqResult;
+    }
+  }
+
+  console.warn('[AI] Todos los proveedores fallaron - usando fallback sin IA');
+  return null;
 }
 
 /**
@@ -98,7 +115,6 @@ export async function translateWithGemini(text: string, targetLang: string): Pro
   const langMap: Record<string, string> = {
     es: 'español',
     en: 'inglés',
-    zh: 'chino mandarín',
   };
 
   const langName = langMap[targetLang] || targetLang;

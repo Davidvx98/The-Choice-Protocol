@@ -44,8 +44,16 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    if (!answers || typeof answers !== 'object') {
+    if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
       return new Response(JSON.stringify({ error: 'Missing answers' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Reject payloads with excessive keys (DoS protection)
+    if (Object.keys(answers).length > 20) {
+      return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });

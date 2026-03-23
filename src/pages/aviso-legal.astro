@@ -1,0 +1,105 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const SITE_URL = import.meta.env.SITE_URL ?? import.meta.env.SITE ?? 'https://the-choice-protocol.teampoza.dev';
+---
+
+<Layout
+  title="Aviso Legal — Las Píldoras"
+  description="Aviso legal e información sobre el titular de Las Píldoras — The Choice Protocol."
+  canonicalPath="/aviso-legal"
+>
+  <main class="max-w-3xl mx-auto px-6 py-16 text-gray-300 font-sans">
+    <a href="/" class="inline-flex items-center gap-2 text-cyber-purple text-sm font-mono mb-10 hover:opacity-80 transition-opacity">
+      ← Volver al inicio
+    </a>
+
+    <h1 class="text-3xl font-bold text-white mb-2">Aviso Legal</h1>
+    <p class="text-gray-500 text-sm font-mono mb-10">Última actualización: marzo 2026</p>
+
+    <section class="space-y-6 leading-relaxed">
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">1. Identificación del titular</h2>
+      <p>
+        En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad
+        de la Información y de Comercio Electrónico (LSSI-CE), se informa que el titular y responsable
+        del sitio web accesible en <strong class="text-white">{SITE_URL}</strong> es:
+      </p>
+      <ul class="list-none space-y-1 ml-2 text-sm">
+        <li><span class="text-gray-500">Proyecto:</span> <strong class="text-white">Las Píldoras — The Choice Protocol</strong></li>
+        <li><span class="text-gray-500">Repositorio:</span>{' '}
+          <a href="https://github.com/Davidvx98" target="_blank" rel="noopener noreferrer"
+             class="text-cyber-purple hover:underline">github.com/Davidvx98</a>
+        </li>
+        <li><span class="text-gray-500">Naturaleza:</span> Proyecto open source sin ánimo de lucro</li>
+      </ul>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">2. Objeto del sitio web</h2>
+      <p>
+        Las Píldoras es un recomendador interactivo de anime y películas impulsado por inteligencia
+        artificial. El objetivo del sitio es proporcionar sugerencias de contenido audiovisual de forma
+        gratuita, personalizada y sin publicidad, con fines exclusivamente informativos y de entretenimiento.
+      </p>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">3. Propiedad intelectual e industrial</h2>
+      <p>
+        El código fuente de la aplicación se publica bajo licencia open source. Los textos, diseño
+        y elementos gráficos propios de Las Píldoras son propiedad de sus autores y están protegidos
+        por la normativa de propiedad intelectual aplicable.
+      </p>
+      <p>
+        Los títulos, portadas, géneros y metadatos de anime y películas mostrados en los resultados
+        pertenecen a sus respectivos titulares (estudios, distribuidoras, etc.) y se presentan con
+        fines meramente informativos.  Las imágenes de portada se obtienen de APIs de terceros
+        (MyAnimeList / TMDB) bajo sus propias condiciones de uso.
+      </p>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">4. Exclusión de garantías y responsabilidad</h2>
+      <p>
+        El titular del sitio no garantiza la exactitud, actualidad, completitud ni idoneidad de los
+        contenidos. Las recomendaciones generadas por IA son orientativas y pueden contener
+        imprecisiones. El titular no será responsable de los daños que pudieran derivarse del uso
+        o de la imposibilidad de uso de este sitio web.
+      </p>
+      <p>
+        El sitio puede contener enlaces a sitios web de terceros (por ejemplo, trailers en YouTube).
+        El titular no se hace responsable del contenido ni de las políticas de privacidad de dichos sitios.
+      </p>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">5. Protección de datos personales</h2>
+      <p>
+        Este sitio <strong class="text-white">no recoge datos personales</strong> identificativos de los usuarios.
+        El nombre introducido en el flujo de la aplicación se almacena únicamente en el
+        <strong class="text-white">localStorage del propio navegador</strong> del usuario y nunca se transmite
+        a sistemas externos con fines de identificación o elaboración de perfiles.
+      </p>
+      <p>
+        Las consultas realizadas a la API de inteligencia artificial se hacen de forma anónima,
+        sin asociar respuestas a personas identificadas o identificables.
+      </p>
+      <p>
+        Para más información sobre el almacenamiento local, consulta nuestra
+        <a href="/politica-cookies" class="text-cyber-purple hover:underline">Política de Cookies</a>.
+      </p>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">6. Legislación aplicable</h2>
+      <p>
+        Este aviso legal se rige por la legislación española y, en lo que resulte aplicable, por la
+        normativa de la Unión Europea. Para cualquier controversia, el titular y el usuario acuerdan
+        someterse a la jurisdicción de los tribunales competentes en España.
+      </p>
+
+      <h2 class="text-xl font-semibold text-white mt-10 mb-3">7. Contacto</h2>
+      <p>
+        Para cualquier consulta relativa a este aviso legal, puedes dirigirte al
+        <a href="https://github.com/Davidvx98" target="_blank" rel="noopener noreferrer"
+           class="text-cyber-purple hover:underline">repositorio de GitHub del proyecto</a>.
+      </p>
+    </section>
+
+    <div class="mt-16 pt-8 border-t border-white/5 flex flex-wrap gap-4 text-xs font-mono text-gray-600">
+      <a href="/politica-cookies" class="hover:text-cyber-purple transition-colors">Política de cookies</a>
+      <a href="/terminos" class="hover:text-cyber-purple transition-colors">Términos y condiciones</a>
+      <a href="/" class="hover:text-cyber-purple transition-colors">Volver al inicio</a>
+    </div>
+  </main>
+</Layout>

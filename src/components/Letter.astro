@@ -127,7 +127,10 @@
     let introAudio: HTMLAudioElement | null = null;
 
     function playIntroAudio() {
-      introAudio = new Audio('/media/lectura_intro_aventura.mp3');
+      const file = getMsgLang() === 'es'
+        ? '/media/lectura_intro_aventura_es.mp3'
+        : '/media/lectura_intro_aventura_eng.mp3';
+      introAudio = new Audio(file);
       introAudio.play().catch(() => {});
     }
 

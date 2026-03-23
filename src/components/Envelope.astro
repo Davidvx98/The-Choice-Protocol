@@ -208,7 +208,7 @@
           'I have been waiting for you...',
           '',
           "You didn't arrive here by chance.",
-          'Something — or someone — brought you to this threshold.',
+          'Something or someone brought you to this threshold.',
           '',
           'What is about to be revealed is not for everyone.',
           'Only those who dare to choose',
@@ -237,7 +237,10 @@
     let letterAudio: HTMLAudioElement | null = null;
 
     function playLetterAudio() {
-      letterAudio = new Audio('/media/lectura_carta.mp3');
+      const file = getIntroLang() === 'es'
+        ? '/media/lectura_carta_es.mp3'
+        : '/media/lectura_carta_eng.mp3';
+      letterAudio = new Audio(file);
       letterAudio.play().catch(() => {});
     }
 

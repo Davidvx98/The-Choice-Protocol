@@ -26,6 +26,9 @@
       <!-- Options grid -->
       <div id="q-options" class="grid gap-3"></div>
 
+      <!-- Conflict warning (shown when incompatible genres are blocked) -->
+      <p id="q-conflict-note" class="mt-4 text-amber-400/80 text-xs font-mono" style="display:none"></p>
+
       <!-- Multi-select continue button (hidden by default) -->
       <div id="q-multi-continue" class="mt-6 flex justify-end" style="display:none">
         <button id="q-multi-btn" class="btn-cyber text-cyber-purple disabled:opacity-30 disabled:cursor-not-allowed" disabled>
@@ -39,12 +42,25 @@
 <script>
   import { gsap } from 'gsap';
 
+  interface QuestionOption {
+    label: string;
+    value: string;
+    icon: string;
+    /** If set, this option belongs to a conflict group (e.g. 'light' or 'dark'). Options in conflicting groups are mutually exclusive. */
+    conflictGroup?: string;
+  }
+
   interface Question {
     id: string;
     title: string;
     subtitle: string;
     multi?: boolean;
-    options: { label: string; value: string; icon: string }[];
+    /**
+     * Lists of mutually-exclusive group names.
+     * E.g. [['light','dark']] means you can't combine light and dark options.
+     */
+    exclusiveGroups?: string[][];
+    options: QuestionOption[];
   }
 
   const questionsAnime: Question[] = [
@@ -66,15 +82,16 @@
       title: '¿Qué géneros te atraen?',
       subtitle: 'Puedes elegir varios — más datos, mejor resultado',
       multi: true,
+      exclusiveGroups: [['light', 'dark']],
       options: [
         { label: 'Acción / Peleas',         value: 'action',   icon: '⚔️' },
-        { label: 'Romance / Drama',         value: 'romance',  icon: '💕' },
+        { label: 'Romance / Drama',         value: 'romance',  icon: '💕', conflictGroup: 'light' },
         { label: 'Misterio / Thriller',     value: 'mystery',  icon: '🔍' },
-        { label: 'Comedia / Slice of life', value: 'comedy',   icon: '😄' },
+        { label: 'Comedia / Slice of life', value: 'comedy',   icon: '😄', conflictGroup: 'light' },
         { label: 'Ciencia ficción',         value: 'scifi',    icon: '🚀' },
         { label: 'Fantasía / Isekai',       value: 'fantasy',  icon: '🔮' },
-        { label: 'Terror / Psicológico',    value: 'horror',   icon: '👁️' },
-        { label: 'Deportes / Competición',  value: 'sports',   icon: '🏆' },
+        { label: 'Terror / Psicológico',    value: 'horror',   icon: '👁️', conflictGroup: 'dark' },
+        { label: 'Deportes / Competición',  value: 'sports',   icon: '🏆', conflictGroup: 'light' },
       ],
     },
     {
@@ -158,14 +175,15 @@
       title: '¿Qué géneros te atraen?',
       subtitle: 'Puedes elegir varios — más datos, mejor resultado',
       multi: true,
+      exclusiveGroups: [['light', 'dark']],
       options: [
         { label: 'Acción / Aventura', value: 'action',      icon: '💥' },
-        { label: 'Drama / Romance',   value: 'romance',     icon: '❤️' },
-        { label: 'Terror / Suspense', value: 'horror',      icon: '👻' },
-        { label: 'Comedia',           value: 'comedy',      icon: '🤣' },
+        { label: 'Drama / Romance',   value: 'romance',     icon: '❤️', conflictGroup: 'light' },
+        { label: 'Terror / Suspense', value: 'horror',      icon: '👻', conflictGroup: 'dark' },
+        { label: 'Comedia',           value: 'comedy',      icon: '🤣', conflictGroup: 'light' },
         { label: 'Ciencia ficción',   value: 'scifi',       icon: '🛸' },
-        { label: 'Thriller / Crimen', value: 'thriller',    icon: '🔪' },
-        { label: 'Animación',         value: 'animation',   icon: '🎠' },
+        { label: 'Thriller / Crimen', value: 'thriller',    icon: '🔪', conflictGroup: 'dark' },
+        { label: 'Animación',         value: 'animation',   icon: '🎠', conflictGroup: 'light' },
         { label: 'Documental',        value: 'documentary', icon: '📹' },
       ],
     },
@@ -244,15 +262,16 @@
     },
     {
       id: 'genres', title: 'What genres appeal to you?', subtitle: 'You can choose multiple — more data, better results', multi: true,
+      exclusiveGroups: [['light', 'dark']],
       options: [
         { label: 'Action / Fights',        value: 'action',  icon: '⚔️' },
-        { label: 'Romance / Drama',        value: 'romance', icon: '💕' },
+        { label: 'Romance / Drama',        value: 'romance', icon: '💕', conflictGroup: 'light' },
         { label: 'Mystery / Thriller',     value: 'mystery', icon: '🔍' },
-        { label: 'Comedy / Slice of life', value: 'comedy',  icon: '😄' },
+        { label: 'Comedy / Slice of life', value: 'comedy',  icon: '😄', conflictGroup: 'light' },
         { label: 'Science fiction',        value: 'scifi',   icon: '🚀' },
         { label: 'Fantasy / Isekai',       value: 'fantasy', icon: '🔮' },
-        { label: 'Horror / Psychological', value: 'horror',  icon: '👁️' },
-        { label: 'Sports / Competition',   value: 'sports',  icon: '🏆' },
+        { label: 'Horror / Psychological', value: 'horror',  icon: '👁️', conflictGroup: 'dark' },
+        { label: 'Sports / Competition',   value: 'sports',  icon: '🏆', conflictGroup: 'light' },
       ],
     },
     {
@@ -320,14 +339,15 @@
     },
     {
       id: 'genres', title: 'What genres appeal to you?', subtitle: 'You can choose multiple — more data, better results', multi: true,
+      exclusiveGroups: [['light', 'dark']],
       options: [
         { label: 'Action / Adventure', value: 'action',      icon: '💥' },
-        { label: 'Drama / Romance',    value: 'romance',     icon: '❤️' },
-        { label: 'Horror / Suspense',  value: 'horror',      icon: '👻' },
-        { label: 'Comedy',             value: 'comedy',      icon: '🤣' },
+        { label: 'Drama / Romance',    value: 'romance',     icon: '❤️', conflictGroup: 'light' },
+        { label: 'Horror / Suspense',  value: 'horror',      icon: '👻', conflictGroup: 'dark' },
+        { label: 'Comedy',             value: 'comedy',      icon: '🤣', conflictGroup: 'light' },
         { label: 'Science fiction',    value: 'scifi',       icon: '🛸' },
-        { label: 'Thriller / Crime',   value: 'thriller',    icon: '🔪' },
-        { label: 'Animation',          value: 'animation',   icon: '🎠' },
+        { label: 'Thriller / Crime',   value: 'thriller',    icon: '🔪', conflictGroup: 'dark' },
+        { label: 'Animation',          value: 'animation',   icon: '🎠', conflictGroup: 'light' },
         { label: 'Documentary',        value: 'documentary', icon: '📹' },
       ],
     },
@@ -400,6 +420,53 @@
     // Multi-select state: set of selected values for current question
     let multiSelected: Set<string> = new Set();
 
+    // ── Mood → genre incompatibilities ──────────────────────────────────────────
+    // Genres that contradict the selected mood — hidden when that mood is chosen
+    const MOOD_BLOCKED_GENRES: Record<string, string[]> = {
+      // anime moods
+      happy:       ['horror', 'mystery'],      // alegre → no terror/misterio
+      energetic:   ['romance'],                // eufórico → no romance lento
+      melancholic: ['comedy', 'sports'],       // melancólico → no comedia/deportes
+      thoughtful:  ['sports'],                 // reflexivo → no deportes
+      // movie moods
+      romantic:    ['horror', 'thriller'],     // romántico → no terror/thriller
+      excited:     ['documentary'],            // adrenalina → no documental
+    };
+
+    /** Disables genre options that contradict the already-answered mood */
+    function applyMoodFilter(q: Question) {
+      if (q.id !== 'genres') return;
+      const mood = answers['mood'];
+      if (!mood) return;
+      const blocked = MOOD_BLOCKED_GENRES[mood] ?? [];
+      if (!blocked.length) return;
+
+      const allBtns = optionsEl!.querySelectorAll<HTMLButtonElement>('button.q-opt');
+      let anyBlocked = false;
+      allBtns.forEach(btn => {
+        const val = btn.dataset.value ?? '';
+        if (blocked.includes(val)) {
+          btn.disabled = true;
+          btn.style.opacity       = '0.18';
+          btn.style.transform     = 'scale(0.95)';
+          btn.style.filter        = 'grayscale(0.8)';
+          btn.style.cursor        = 'not-allowed';
+          btn.style.pointerEvents = 'none';
+          anyBlocked = true;
+        }
+      });
+
+      if (anyBlocked) {
+        const noteEl = document.getElementById('q-conflict-note');
+        if (noteEl) {
+          noteEl.textContent = currentLang === 'es'
+            ? '🚫 Algunos géneros no encajan con tu estado de ánimo y están desactivados'
+            : "🚫 Some genres don't match your mood and are disabled";
+          noteEl.style.display = 'block';
+        }
+      }
+    }
+
     type QLang = 'en' | 'es';
     let currentLang: QLang = (localStorage.getItem('lang') || 'en') as QLang;
     function getProgressText(idx: number, total: number): string {
@@ -444,6 +511,7 @@
       q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.dataset.value = opt.value;
+        btn.dataset.conflictGroup = opt.conflictGroup ?? '';
         btn.className = `q-opt group flex flex-col items-center gap-2 p-4 rounded-xl 
                          bg-white/5 border border-white/10 
                          hover:border-cyber-purple/50 hover:bg-cyber-purple/10
@@ -461,6 +529,10 @@
         optionsEl!.appendChild(btn);
       });
 
+      // Hide conflict note for new question
+      const noteEl = document.getElementById('q-conflict-note');
+      if (noteEl) noteEl.style.display = 'none';
+
       // Animar todos los botones a la vez, sin escalonado que deja los últimos en opacity:0
       gsap.from(optionsEl!.querySelectorAll('button'), {
         y: 16,
@@ -468,9 +540,74 @@
         duration: 0.35,
         ease: 'power2.out',
       });
+
+      // Apply mood-based genre filter AFTER animation so opacity doesn't get overridden
+      setTimeout(() => applyMoodFilter(q), 370);
+    }
+
+    /** Blocks/unblocks option buttons based on conflict groups defined in the question. */
+    function updateConflictStates(q: Question) {
+      if (!q.exclusiveGroups?.length) return;
+
+      // Which conflict groups are currently active (have ≥1 selected option)
+      const activeGroups = new Set<string>();
+      q.options.forEach(opt => {
+        if (multiSelected.has(opt.value) && opt.conflictGroup) {
+          activeGroups.add(opt.conflictGroup);
+        }
+      });
+
+      // Which groups are blocked because they conflict with an active group
+      const blockedGroups = new Set<string>();
+      q.exclusiveGroups.forEach(groupSet => {
+        const activeInSet = groupSet.filter(g => activeGroups.has(g));
+        if (activeInSet.length > 0) {
+          groupSet.forEach(g => {
+            if (!activeGroups.has(g)) blockedGroups.add(g);
+          });
+        }
+      });
+
+      // Apply visual states to each option button
+      const allBtns = optionsEl!.querySelectorAll<HTMLButtonElement>('button.q-opt');
+      allBtns.forEach(btn => {
+        const grp = btn.dataset.conflictGroup;
+        const isSelected = multiSelected.has(btn.dataset.value ?? '');
+        const isBlocked  = !!(grp && blockedGroups.has(grp));
+
+        btn.disabled = isBlocked;
+        if (isBlocked) {
+          btn.style.opacity       = '0.2';
+          btn.style.transform     = 'scale(0.95)';
+          btn.style.filter        = 'grayscale(0.7)';
+          btn.style.cursor        = 'not-allowed';
+          btn.style.pointerEvents = 'none';
+        } else if (!isSelected) {
+          btn.style.opacity       = '1';
+          btn.style.transform     = 'scale(1)';
+          btn.style.filter        = '';
+          btn.style.cursor        = 'pointer';
+          btn.style.pointerEvents = '';
+        }
+      });
+
+      // Show / hide the conflict warning note
+      const noteEl = document.getElementById('q-conflict-note');
+      if (noteEl) {
+        if (blockedGroups.size > 0) {
+          noteEl.textContent = currentLang === 'es'
+            ? '⚠️ Géneros incompatibles bloqueados — alegre/relajado y terror/psicológico no se mezclan'
+            : "⚠️ Incompatible genres blocked — light-hearted and horror/thriller don't mix";
+          noteEl.style.display = 'block';
+        } else {
+          noteEl.style.display = 'none';
+        }
+      }
     }
 
     function toggleMultiOption(questionId: string, value: string, btnEl: HTMLElement) {
+      if ((btnEl as HTMLButtonElement).disabled) return; // blocked by conflict
+
       if (multiSelected.has(value)) {
         multiSelected.delete(value);
         gsap.to(btnEl, { borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', scale: 1, duration: 0.2 });
@@ -488,6 +625,9 @@
             : `Continue with ${multiSelected.size} selected →`
           : currentLang === 'es' ? 'Continuar →' : 'Continue →';
       }
+      // Update conflict blocking after every toggle
+      const q = questions[currentIndex];
+      if (q) updateConflictStates(q);
     }
 
     function commitMultiAndAdvance(questionId: string) {
