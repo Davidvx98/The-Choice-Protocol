@@ -165,8 +165,9 @@ import Result from '../components/Result.astro';
     <!-- 🍪 Cookie consent banner -->
     <div id="cookie-banner"
       class="fixed bottom-16 left-1/2 -translate-x-1/2 z-[60] w-[92%] max-w-xl
-             glass rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center gap-3
-             border border-white/10 shadow-xl hidden">
+             glass rounded-2xl px-5 py-4 flex-col sm:flex-row items-center gap-3
+             border border-white/10 shadow-xl"
+      style="display:none">
       <span class="text-2xl flex-shrink-0">🍪</span>
       <p id="cookie-banner-text" class="text-gray-300 text-xs leading-relaxed text-center sm:text-left flex-1">
         Usamos cookies analíticas (Google Analytics) para mejorar la experiencia. No se almacena información personal.
@@ -424,7 +425,7 @@ import Result from '../components/Result.astro';
       cookieBanner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
       cookieBanner.style.opacity = '0';
       cookieBanner.style.transform = 'translateX(-50%) translateY(12px)';
-      setTimeout(() => cookieBanner.classList.add('hidden'), 420);
+      setTimeout(() => { cookieBanner.style.display = 'none'; }, 420);
     }
   }
 
@@ -432,9 +433,9 @@ import Result from '../components/Result.astro';
     // Show after a short delay so it doesn't pop up instantly
     setTimeout(() => {
       if (cookieBanner) {
-        cookieBanner.classList.remove('hidden');
         cookieBanner.style.opacity = '0';
         cookieBanner.style.transform = 'translateX(-50%) translateY(12px)';
+        cookieBanner.style.display = 'flex';
         requestAnimationFrame(() => {
           cookieBanner.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
           cookieBanner.style.opacity = '1';

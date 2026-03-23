@@ -433,12 +433,24 @@
       excited:     ['documentary'],            // adrenalina → no documental
     };
 
-    /** Disables genre options that contradict the already-answered mood */
+    // Intensity options that contradict the mood
+    const MOOD_BLOCKED_INTENSITY: Record<string, string[]> = {
+      happy:       ['dark'],          // alegre → no oscuro/perturbador
+      energetic:   ['dark'],          // eufórico → no oscuro
+      nostalgic:   ['dark'],          // nostálgico → no oscuro
+      romantic:    ['dark'],          // romántico → no oscuro
+      melancholic: ['light'],         // melancólico → no ligero
+    };
+
+    /** Disables genre/intensity options that contradict the already-answered mood */
     function applyMoodFilter(q: Question) {
-      if (q.id !== 'genres') return;
+      if (q.id !== 'genres' && q.id !== 'intensity') return;
       const mood = answers['mood'];
       if (!mood) return;
-      const blocked = MOOD_BLOCKED_GENRES[mood] ?? [];
+
+      const blocked = q.id === 'genres'
+        ? (MOOD_BLOCKED_GENRES[mood] ?? [])
+        : (MOOD_BLOCKED_INTENSITY[mood] ?? []);
       if (!blocked.length) return;
 
       const allBtns = optionsEl!.querySelectorAll<HTMLButtonElement>('button.q-opt');
@@ -460,8 +472,8 @@
         const noteEl = document.getElementById('q-conflict-note');
         if (noteEl) {
           noteEl.textContent = currentLang === 'es'
-            ? '🚫 Algunos géneros no encajan con tu estado de ánimo y están desactivados'
-            : "🚫 Some genres don't match your mood and are disabled";
+            ? '🚫 Algunas opciones no encajan con tu estado de ánimo y están desactivadas'
+            : "🚫 Some options don't match your mood and are disabled";
           noteEl.style.display = 'block';
         }
       }
