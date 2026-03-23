@@ -72,7 +72,19 @@ import Result from '../components/Result.astro';
 
         <!-- Header -->
         <p class="text-cyber-purple text-xs font-mono tracking-widest uppercase border-b border-white/5 pb-2"
-           id="cfg-title">Settings</p>
+           id="cfg-title">Configuración</p>
+
+        <!-- Language -->
+        <div class="flex items-center justify-between">
+          <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">🌐 <span id="cfg-lang-label">Idioma</span></p>
+          <button id="lang-toggle"
+            aria-label="Cambiar idioma"
+            class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/10 text-xs font-mono text-gray-300
+                   hover:border-cyber-purple/60 hover:text-cyber-purple transition-all duration-200 cursor-pointer select-none">
+            <span id="lang-flag">🇬🇧</span>
+            <span id="lang-label">English</span>
+          </button>
+        </div>
 
         <!-- Volume -->
         <div class="flex flex-col gap-1.5">
@@ -273,7 +285,7 @@ import Result from '../components/Result.astro';
   const DEFAULT_NAME_ES = 'Viajero';
 
   function getDefaultName() {
-    return (localStorage.getItem('lang') || 'en') === 'es' ? DEFAULT_NAME_ES : DEFAULT_NAME_EN;
+    return (localStorage.getItem('lang') || 'es') === 'es' ? DEFAULT_NAME_ES : DEFAULT_NAME_EN;
   }
 
   function setSkipUI(on: boolean) {
@@ -341,13 +353,14 @@ import Result from '../components/Result.astro';
   const langToggleBtn = document.getElementById('lang-toggle') as HTMLElement | null;
   const langFlagEl    = document.getElementById('lang-flag')   as HTMLElement | null;
   const langLabelEl   = document.getElementById('lang-label')  as HTMLElement | null;
-  let currentLang: string = localStorage.getItem('lang') || 'en';
+  let currentLang: string = localStorage.getItem('lang') || 'es';
 
   function applyLang(lang: string) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
-    if (langFlagEl)  langFlagEl.textContent  = lang === 'en' ? '🇬🇧' : '🇪🇸';
-    if (langLabelEl) langLabelEl.textContent = lang.toUpperCase();
+    // Show the OTHER language flag/label so the button reads "switch to X"
+    if (langFlagEl)  langFlagEl.textContent  = lang === 'es' ? '🇬🇧' : '🇪🇸';
+    if (langLabelEl) langLabelEl.textContent = lang === 'es' ? 'English' : 'Español';
     window.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
   }
   langToggleBtn?.addEventListener('click', () => applyLang(currentLang === 'en' ? 'es' : 'en'));
@@ -358,12 +371,14 @@ import Result from '../components/Result.astro';
       resetDesc: 'Clears name, choice and answers. Returns to start.', resetBtn: 'Reset',
       histTitle: 'Session history', histDesc: 'Review your saved recommendations.', histBtn: 'View history',
       skipTitle: 'Skip animations', skipDesc: 'Go directly to pill choice. Default name: Traveler.',
+      langLabel: 'Language',
     },
     es: {
       title: 'Configuración', volLabel: 'Volumen de música', resetTitle: 'Reiniciar experiencia',
       resetDesc: 'Borra nombre, elección y respuestas. Vuelves al inicio.', resetBtn: 'Reiniciar',
       histTitle: 'Historial de sesiones', histDesc: 'Consulta tus recomendaciones guardadas.', histBtn: 'Ver historial',
       skipTitle: 'Quitar animaciones', skipDesc: 'Va directo a elegir la píldora. Nombre predefinido: Viajero.',
+      langLabel: 'Idioma',
     },
   };
 
@@ -384,6 +399,7 @@ import Result from '../components/Result.astro';
     setCfgText('cfg-hist-title', c.histTitle);
     setCfgText('cfg-hist-desc',  c.histDesc);
     setCfgText('cfg-hist-btn',   c.histBtn);
+    setCfgText('cfg-lang-label', c.langLabel);
   }
 
   // Listen for lang changes to update settings panel
