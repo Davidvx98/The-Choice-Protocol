@@ -9,4 +9,4 @@ Disallow: /api/
 Crawl-delay: 1
 
 # Sitemap
-Sitemap: https://the-choice-protocol.com/sitemap-index.xml
+Sitemap: https://the-choice-protocol.es/sitemap-index.xml

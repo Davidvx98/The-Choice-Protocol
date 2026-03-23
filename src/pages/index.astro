@@ -149,11 +149,11 @@ import Result from '../components/Result.astro';
           Las imágenes provienen de APIs públicas (MyAnimeList, TMDB).
         </p>
         <div class="flex flex-col gap-1 pt-1">
-          <a id="legal-cookies-link" href="#"
+          <a id="legal-cookies-link" href="/politica-cookies"
             class="text-cyber-blue text-xs font-mono hover:underline underline-offset-2 transition">
             🍪 <span id="legal-cookies-label">Política de Cookies</span>
           </a>
-          <a id="legal-terms-link" href="#"
+          <a id="legal-terms-link" href="/terminos"
             class="text-cyber-blue text-xs font-mono hover:underline underline-offset-2 transition">
             📄 <span id="legal-terms-label">Términos de Uso</span>
           </a>
@@ -294,6 +294,7 @@ import Result from '../components/Result.astro';
       introScene.classList.remove('scene-visible');
       introScene.classList.add('scene-hidden');
     }
+    window.dispatchEvent(new CustomEvent('envelope:opened'));
     window.dispatchEvent(new CustomEvent('scene:advance', { detail: { from: 'intro', to: 'pills' } }));
     // Close the settings panel after skip
     settingsOpen = false;
