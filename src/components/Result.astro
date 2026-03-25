@@ -26,8 +26,19 @@
         <h2 id="result-header" class="text-2xl sm:text-3xl font-sans font-bold text-white"></h2>
       </div>
 
-      <!-- ── Cards list ── -->
-      <div id="result-cards" class="space-y-4 w-full"></div>
+      <!-- ── Cards carousel ── -->
+      <div class="relative w-full">
+        <div id="result-cards" class="relative w-full" style="overflow:hidden;"></div>
+
+        <!-- carousel navigation -->
+        <div id="carousel-controls" style="display:none;flex-direction:column;align-items:center;gap:.75rem;margin-top:1.5rem;">
+          <div id="carousel-dots" style="display:flex;gap:.625rem;"></div>
+          <div style="display:flex;gap:.75rem;align-items:center;">
+            <button id="btn-prev" class="btn-cyber text-gray-400" style="font-size:1.1rem;padding:.4rem 1.1rem;">&#8592;</button>
+            <button id="btn-next" class="btn-cyber text-cyber-purple" style="font-size:1.1rem;padding:.4rem 1.1rem;">&#8594;</button>
+          </div>
+        </div>
+      </div>
 
       <div class="flex flex-wrap items-center justify-center gap-4 mt-4">
         <button id="btn-retry" class="btn-cyber text-cyber-purple">🔄 <span id="btn-retry-label">Try again</span></button>
@@ -85,9 +96,13 @@
     const historyEmpty  = document.getElementById('history-empty');
     const retryLabel    = document.getElementById('btn-retry-label');
     const histLabel     = document.getElementById('btn-history-label');
-    const histLabelText = document.getElementById('hist-label-text');
-    const histTitleText = document.getElementById('hist-title-text');
-    const histCloseText = document.getElementById('hist-close-text');
+    const histLabelText    = document.getElementById('hist-label-text');
+    const histTitleText    = document.getElementById('hist-title-text');
+    const histCloseText    = document.getElementById('hist-close-text');
+    const carouselControls = document.getElementById('carousel-controls') as HTMLElement | null;
+    const carouselDots     = document.getElementById('carousel-dots');
+    const btnPrev          = document.getElementById('btn-prev') as HTMLButtonElement | null;
+    const btnNext          = document.getElementById('btn-next') as HTMLButtonElement | null;
 
     if (!scene || !loading || !content) return;
 
@@ -100,6 +115,8 @@
     let _currentName = '';
     let _currentType = '';
     let cards: HTMLElement[] = [];
+    let carouselIndex = 0;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const translationCache = new Map<string, string>();
 
     const s = () => ({ translating: _t(_lang, 'result.translating') });
@@ -229,6 +246,73 @@
       return card;
     }
 
+    // ── Carousel helpers ────────────────────────────────────────────────────────────
+    function renderCarouselDots(count: number) {
+      if (!carouselDots) return;
+      carouselDots.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const dot = document.createElement('button');
+        const active = i === carouselIndex;
+        dot.style.cssText = `width:10px;height:10px;border-radius:50%;cursor:pointer;padding:0;border:1px solid ${active ? 'rgba(176,38,255,0.85)' : 'rgba(255,255,255,0.25)'};background:${active ? 'rgba(176,38,255,0.85)' : 'transparent'};transition:all .3s;${active ? 'transform:scale(1.3);' : ''}`;
+        dot.setAttribute('aria-label', String(i + 1));
+        dot.addEventListener('click', () => goToCard(i));
+        carouselDots.appendChild(dot);
+      }
+    }
+
+    function updateCarouselDots() {
+      if (!carouselDots) return;
+      (Array.from(carouselDots.children) as HTMLElement[]).forEach((dot, i) => {
+        const active = i === carouselIndex;
+        dot.style.borderColor = active ? 'rgba(176,38,255,0.85)' : 'rgba(255,255,255,0.25)';
+        dot.style.background  = active ? 'rgba(176,38,255,0.85)' : 'transparent';
+        dot.style.transform   = active ? 'scale(1.3)' : 'scale(1)';
+      });
+    }
+
+    function updateCarouselNav() {
+      if (btnPrev) btnPrev.disabled = carouselIndex === 0;
+      if (btnNext) btnNext.disabled = carouselIndex >= cards.length - 1;
+    }
+
+    function goToCard(newIdx: number) {
+      if (newIdx < 0 || newIdx >= cards.length || newIdx === carouselIndex) return;
+      const oldCard = cards[carouselIndex];
+      const newCard = cards[newIdx];
+      const dir     = newIdx > carouselIndex ? 1 : -1;
+
+      // Place new card off-screen (absolutely positioned)
+      newCard.style.position     = 'absolute';
+      newCard.style.top          = '0';
+      newCard.style.left         = '0';
+      newCard.style.width        = '100%';
+      newCard.style.pointerEvents = '';
+      gsap.set(newCard, { x: dir * 100 + '%', opacity: 0 });
+
+      // Slide old card out
+      gsap.to(oldCard, { x: -dir * 100 + '%', opacity: 0, duration: 0.45, ease: 'power2.inOut' });
+
+      // Slide new card in; on complete swap flow positions
+      gsap.to(newCard, {
+        x: '0%', opacity: 1, duration: 0.45, ease: 'power2.inOut',
+        onComplete: () => {
+          gsap.set(newCard, { clearProps: 'x,opacity' });
+          newCard.style.position = '';
+          newCard.style.top      = '';
+          newCard.style.left     = '';
+          newCard.style.width    = '';
+          gsap.set(oldCard, { clearProps: 'x' });
+          oldCard.style.position      = 'absolute';
+          oldCard.style.opacity       = '0';
+          oldCard.style.pointerEvents = 'none';
+        },
+      });
+
+      carouselIndex = newIdx;
+      updateCarouselDots();
+      updateCarouselNav();
+    }
+
     // ── Show result ────────────────────────────────────────────────────────────────
     function showResult(data: any, name: string, type: string) {
       loading!.classList.add('hidden');
@@ -241,18 +325,53 @@
       if (headerEl) headerEl.textContent = _t(_lang, 'result.header', { name });
 
       cards = [];
+      carouselIndex = 0;
 
       if (cardsEl) {
         cardsEl.innerHTML = '';
+
         if (!currentRecs.length) {
           cardsEl.innerHTML = `<div class="rounded-2xl border border-white/10 p-8 text-center text-gray-400 font-mono">${_t(_lang, 'result.noResults')}</div>`;
-        } else {
+          if (carouselControls) carouselControls.style.display = 'none';
+
+        } else if (prefersReducedMotion) {
+          // Reduced-motion: vertical list, no transitions
+          cardsEl.style.overflow = '';
+          cardsEl.className = 'space-y-4 w-full';
+          if (carouselControls) carouselControls.style.display = 'none';
           currentRecs.forEach((rec, idx) => {
             const card = buildCard(rec, idx);
             cardsEl.appendChild(card);
             cards.push(card);
-            gsap.from(card, { y: 20, opacity: 0, duration: 0.4, delay: 0.1 * idx, ease: 'power2.out' });
           });
+          saveToHistory(currentRecs, name, type);
+
+        } else {
+          // Carousel mode: one card at a time with GSAP slide transitions
+          cardsEl.style.overflow = 'hidden';
+          cardsEl.className = 'relative w-full';
+          if (carouselControls) carouselControls.style.display = 'flex';
+
+          currentRecs.forEach((rec, idx) => {
+            const card = buildCard(rec, idx);
+            cardsEl.appendChild(card);
+            cards.push(card);
+            if (idx === 0) {
+              card.style.position = 'relative'; // in flow → determines container height
+            } else {
+              card.style.position      = 'absolute';
+              card.style.top           = '0';
+              card.style.left          = '0';
+              card.style.width         = '100%';
+              card.style.opacity       = '0';
+              card.style.pointerEvents = 'none';
+              gsap.set(card, { x: '100%' });
+            }
+          });
+
+          renderCarouselDots(currentRecs.length);
+          updateCarouselNav();
+          gsap.from(cards[0], { y: 20, opacity: 0, duration: 0.5, ease: 'power2.out' });
           saveToHistory(currentRecs, name, type);
         }
       }
@@ -428,6 +547,8 @@
 
     btnHistoryBtn?.addEventListener('click', openHistory);
     btnCloseHist?.addEventListener('click', closeHistory);
+    btnPrev?.addEventListener('click', () => goToCard(carouselIndex - 1));
+    btnNext?.addEventListener('click', () => goToCard(carouselIndex + 1));
     window.addEventListener('history:open', openHistory);
 
     // Language change handled via page reload (setLang() calls location.reload())
@@ -439,6 +560,7 @@
       loading!.classList.remove('hidden');
       content!.classList.add('hidden');
       cards = [];
+      carouselIndex = 0;
       if (cardsEl) cardsEl.innerHTML = '';
 
       scene.classList.remove('scene-hidden');
