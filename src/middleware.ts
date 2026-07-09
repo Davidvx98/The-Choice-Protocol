@@ -14,6 +14,7 @@ const RATE_LIMITS: Record<string, number> = {
   '/api/movie':      20,
 };
 const DEFAULT_RATE_LIMIT = 30;
+let nextBucketCleanupAt = Date.now() + 5 * 60_000;
 
 function cleanBuckets() {
   const now = Date.now();
@@ -21,9 +22,6 @@ function cleanBuckets() {
     if (now > bucket.resetAt) rateBuckets.delete(key);
   }
 }
-
-// Clean stale buckets every 5 minutes
-setInterval(cleanBuckets, 5 * 60_000);
 
 function getClientIP(request: Request): string {
   return (
@@ -38,6 +36,12 @@ function checkRateLimit(ip: string, pathname: string): boolean {
   const limit = RATE_LIMITS[pathname] || DEFAULT_RATE_LIMIT;
   const key = `${ip}:${pathname}`;
   const now = Date.now();
+
+  if (now >= nextBucketCleanupAt) {
+    cleanBuckets();
+    nextBucketCleanupAt = now + 5 * 60_000;
+  }
+
   const bucket = rateBuckets.get(key);
 
   if (!bucket || now > bucket.resetAt) {
