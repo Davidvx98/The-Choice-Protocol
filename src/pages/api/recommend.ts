@@ -90,6 +90,8 @@ export const POST: APIRoute = async ({ request }) => {
           genres: tags.genres,
           minScore: tags.minScore,
           orderBy: tags.orderBy,
+          type: tags.animeType,
+          episodeRange: tags.episodeRange,
           limit: 10,
         });
       } else {
@@ -97,6 +99,7 @@ export const POST: APIRoute = async ({ request }) => {
           genres: tags.genres,
           minScore: tags.minScore,
           yearRange: tags.yearRange,
+          runtimeRange: tags.runtimeRange,
           limit: 10,
         });
       }

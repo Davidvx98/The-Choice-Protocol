@@ -424,6 +424,7 @@
     const answers: Record<string, string> = {};
     // Multi-select state: set of selected values for current question
     let multiSelected: Set<string> = new Set();
+    let optionLocked = false;
 
     // ── Mood → genre incompatibilities ──────────────────────────────────────────
     // Genres that contradict the selected mood — hidden when that mood is chosen
@@ -447,6 +448,22 @@
       melancholic: ['light'],         // melancólico → no ligero
     };
 
+    function setBlockedVisual(btn: HTMLButtonElement, blocked: boolean) {
+      if (blocked) {
+        btn.style.opacity       = '0.2';
+        btn.style.transform     = 'scale(0.95)';
+        btn.style.filter        = 'grayscale(0.75)';
+        btn.style.cursor        = 'not-allowed';
+        btn.style.pointerEvents = 'none';
+      } else {
+        btn.style.opacity       = '1';
+        btn.style.transform     = 'scale(1)';
+        btn.style.filter        = '';
+        btn.style.cursor        = 'pointer';
+        btn.style.pointerEvents = '';
+      }
+    }
+
     /** Disables genre/intensity options that contradict the already-answered mood */
     function applyMoodFilter(q: Question) {
       if (q.id !== 'genres' && q.id !== 'intensity') return;
@@ -465,12 +482,14 @@
         if (blocked.includes(val)) {
           btn.disabled = true;
           btn.dataset.moodBlocked = 'true';   // marker so updateConflictStates skips it
-          btn.style.opacity       = '0.18';
-          btn.style.transform     = 'scale(0.95)';
-          btn.style.filter        = 'grayscale(0.8)';
-          btn.style.cursor        = 'not-allowed';
-          btn.style.pointerEvents = 'none';
+          setBlockedVisual(btn, true);
           anyBlocked = true;
+        } else if (btn.dataset.moodBlocked === 'true') {
+          delete btn.dataset.moodBlocked;
+          if (!btn.dataset.conflictBlocked && !optionLocked) {
+            btn.disabled = false;
+            setBlockedVisual(btn, false);
+          }
         }
       });
 
@@ -492,6 +511,7 @@
       if (!q) return;
 
       multiSelected = new Set();
+      optionLocked = false;
 
       const total = questions.length;
       const pct = Math.round((index / total) * 100);
@@ -553,7 +573,10 @@
         opacity: 0,
         duration: 0.35,
         ease: 'power2.out',
-        onComplete: () => applyMoodFilter(q), // guaranteed AFTER animation ends
+        onComplete: () => {
+          applyMoodFilter(q);
+          updateConflictStates(q);
+        },
       });
     }
 
@@ -586,20 +609,16 @@
         const grp = btn.dataset.conflictGroup;
         const isSelected = multiSelected.has(btn.dataset.value ?? '');
         const isBlocked  = !!(grp && blockedGroups.has(grp));
+        const isMoodBlocked = btn.dataset.moodBlocked === 'true';
 
-        btn.disabled = isBlocked;
+        if (isBlocked) btn.dataset.conflictBlocked = 'true';
+        else delete btn.dataset.conflictBlocked;
+
+        btn.disabled = isBlocked || isMoodBlocked || optionLocked;
         if (isBlocked) {
-          btn.style.opacity       = '0.2';
-          btn.style.transform     = 'scale(0.95)';
-          btn.style.filter        = 'grayscale(0.7)';
-          btn.style.cursor        = 'not-allowed';
-          btn.style.pointerEvents = 'none';
-        } else if (!isSelected && !btn.dataset.moodBlocked) {
-          btn.style.opacity       = '1';
-          btn.style.transform     = 'scale(1)';
-          btn.style.filter        = '';
-          btn.style.cursor        = 'pointer';
-          btn.style.pointerEvents = '';
+          setBlockedVisual(btn, true);
+        } else if (!isSelected && !isMoodBlocked && !optionLocked) {
+          setBlockedVisual(btn, false);
         }
       });
 
@@ -620,7 +639,7 @@
     }
 
     function toggleMultiOption(questionId: string, value: string, btnEl: HTMLElement) {
-      if ((btnEl as HTMLButtonElement).disabled) return; // blocked by conflict
+      if (optionLocked || (btnEl as HTMLButtonElement).disabled) return; // blocked or already committed
 
       if (multiSelected.has(value)) {
         multiSelected.delete(value);
@@ -643,7 +662,14 @@
     }
 
     function commitMultiAndAdvance(questionId: string) {
+      if (optionLocked || multiSelected.size === 0) return;
+      optionLocked = true;
       answers[questionId] = [...multiSelected].join(',');
+      optionsEl!.querySelectorAll<HTMLButtonElement>('button.q-opt').forEach(btn => {
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+      });
+      if (multiBtn) multiBtn.disabled = true;
 
       // Fill progress bar immediately on selection
       const total = questions.length;
@@ -660,6 +686,8 @@
     });
 
     function selectOption(questionId: string, value: string, btnEl: HTMLElement) {
+      if (optionLocked || (btnEl as HTMLButtonElement).disabled) return;
+      optionLocked = true;
       answers[questionId] = value;
 
       // Fill progress bar immediately on selection
@@ -670,6 +698,8 @@
 
       const allBtns = optionsEl!.querySelectorAll('button');
       allBtns.forEach(b => {
+        (b as HTMLButtonElement).disabled = true;
+        (b as HTMLElement).style.pointerEvents = 'none';
         if (b !== btnEl) gsap.to(b, { opacity: 0.3, scale: 0.95, duration: 0.3 });
       });
       gsap.to(btnEl, { scale: 1.05, borderColor: 'rgba(176, 38, 255, 0.7)', duration: 0.3 });

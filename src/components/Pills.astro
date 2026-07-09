@@ -100,9 +100,17 @@
     const canvas = document.getElementById('matrix-canvas') as HTMLCanvasElement | null;
     if (!scene || !greeting || !pillRed || !pillBlue || !canvas) return;
 
-    let chosen = false;
-
     const _lang = getLang();
+
+    function setPillsDisabled(disabled: boolean) {
+      [pillRed, pillBlue].forEach((pill) => {
+        const btn = pill as HTMLButtonElement;
+        btn.disabled = disabled;
+        btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+        btn.style.pointerEvents = disabled ? 'none' : '';
+        btn.style.cursor = disabled ? 'not-allowed' : '';
+      });
+    }
 
     function applyPillsLang() {
       const titleEl    = document.getElementById('pills-title');
@@ -149,8 +157,10 @@
       const detail = (e as CustomEvent).detail;
       if (detail.to !== 'pills') return;
 
-      chosen = false;
       delete scene!.dataset.chosen;
+      setPillsDisabled(false);
+      gsap.killTweensOf([pillRed, pillBlue]);
+      gsap.set([pillRed, pillBlue], { clearProps: 'scale,opacity,filter' });
 
       const h2El = scene.querySelector('h2');
       gsap.set(scene, { opacity: 1 });
@@ -197,7 +207,7 @@
     function choosePill(choice: string) {
       if (scene!.dataset.chosen === '1') return;
       scene!.dataset.chosen = '1';
-      chosen = true;
+      setPillsDisabled(true);
 
       document.documentElement.requestFullscreen().catch(() => {});
       localStorage.setItem('pillChoice', choice);
@@ -219,7 +229,7 @@
       const tl = gsap.timeline();
 
       // Highlight chosen, fade other
-      tl.to(other, { opacity: 0, scale: 0.8, duration: 0.5 });
+      tl.to(other, { opacity: 0.16, scale: 0.8, filter: 'grayscale(0.85)', duration: 0.5 });
       tl.to(selected, { scale: 1.2, duration: 0.4 }, '-=0.3');
 
       // Flash effect

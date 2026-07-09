@@ -41,9 +41,11 @@ export async function searchAnime(params: {
   genres?: number[];
   minScore?: number;
   orderBy?: string;
+  type?: 'tv' | 'movie';
+  episodeRange?: [number, number];
   limit?: number;
 }): Promise<AnimeResult[]> {
-  const { genres = [], minScore = 6, orderBy = 'score', limit = 10 } = params;
+  const { genres = [], minScore = 6, orderBy = 'score', type, episodeRange, limit = 10 } = params;
   
   // Pedimos el doble para tener margen tras filtrar secuelas
   const fetchLimit = Math.min(limit * 2, 25);
@@ -58,6 +60,9 @@ export async function searchAnime(params: {
 
   if (genres.length > 0) {
     query.set('genres', genres.join(','));
+  }
+  if (type) {
+    query.set('type', type);
   }
 
   const controller = new AbortController();
@@ -82,7 +87,14 @@ export async function searchAnime(params: {
     genres: (item.genres || []).map((g: any) => g.name),
   }));
 
-  return mapped.filter(a => !isSequel(a.title)).slice(0, limit);
+  return mapped
+    .filter(a => !isSequel(a.title))
+    .filter(a => {
+      if (!episodeRange) return true;
+      if (!a.episodes) return false;
+      return a.episodes >= episodeRange[0] && a.episodes <= episodeRange[1];
+    })
+    .slice(0, limit);
 }
 
 // --- TMDB (Películas) ---
@@ -118,9 +130,10 @@ export async function searchMovies(params: {
   genres?: number[];
   minScore?: number;
   yearRange?: [number, number];
+  runtimeRange?: [number, number];
   limit?: number;
 }): Promise<MovieResult[]> {
-  const { genres = [], minScore = 6, yearRange, limit = 10 } = params;
+  const { genres = [], minScore = 6, yearRange, runtimeRange, limit = 10 } = params;
 
   const query = new URLSearchParams({
     language: 'es-ES',
@@ -137,6 +150,10 @@ export async function searchMovies(params: {
   if (yearRange) {
     query.set('primary_release_date.gte', `${yearRange[0]}-01-01`);
     query.set('primary_release_date.lte', `${yearRange[1]}-12-31`);
+  }
+  if (runtimeRange) {
+    query.set('with_runtime.gte', String(runtimeRange[0]));
+    query.set('with_runtime.lte', String(runtimeRange[1]));
   }
   const headers = applyTmdbAuth(query);
 
