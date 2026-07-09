@@ -27,6 +27,7 @@ setInterval(cleanBuckets, 5 * 60_000);
 
 function getClientIP(request: Request): string {
   return (
+    request.headers.get('cf-connecting-ip') ||
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
     'unknown'
@@ -61,7 +62,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy':          'strict-origin-when-cross-origin',
   'Permissions-Policy':       'camera=(), microphone=(), geolocation=()',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://myanimelist.net https://cdn.myanimelist.net https://*.myanimelist.net https://image.tmdb.org https://i.ytimg.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cloudflareinsights.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; frame-src 'none'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
+  'Content-Security-Policy':  "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://myanimelist.net https://cdn.myanimelist.net https://*.myanimelist.net https://image.tmdb.org https://i.ytimg.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cloudflareinsights.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; frame-src 'none'; frame-ancestors 'none'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;",
 };
 
 export const onRequest = defineMiddleware(async ({ request, url }, next) => {

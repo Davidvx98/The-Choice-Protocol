@@ -6,8 +6,7 @@
  */
 
 import Groq from 'groq-sdk';
-
-const API_KEY = (process.env.GROQ_API_KEY || import.meta.env.GROQ_API_KEY || '').trim();
+import { getEnv } from './env';
 
 // Fallback chain de menor a mayor rapidez
 const MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
@@ -16,19 +15,20 @@ const TIMEOUT_MS = 20_000;
 let groqClient: Groq | null = null;
 
 function getClient(): Groq {
+  const apiKey = getEnv('GROQ_API_KEY');
   if (!groqClient) {
-    if (!API_KEY) throw new Error('GROQ_API_KEY not set');
-    groqClient = new Groq({ apiKey: API_KEY });
+    if (!apiKey) throw new Error('GROQ_API_KEY not set');
+    groqClient = new Groq({ apiKey });
   }
   return groqClient;
 }
 
 export function isGroqAvailable(): boolean {
-  return !!API_KEY;
+  return !!getEnv('GROQ_API_KEY');
 }
 
 export async function askGroq(prompt: string): Promise<string> {
-  if (!API_KEY) throw new Error('GROQ_API_KEY not set');
+  if (!getEnv('GROQ_API_KEY')) throw new Error('GROQ_API_KEY not set');
 
   for (const model of MODELS) {
     try {
@@ -82,7 +82,7 @@ export async function askGroqSafe(prompt: string): Promise<string | null> {
  * Traduce texto usando Groq (siempre preferido sobre Gemini por velocidad y cuota)
  */
 export async function translateWithGroq(text: string, targetLang: string): Promise<string | null> {
-  if (!API_KEY) return null;
+  if (!getEnv('GROQ_API_KEY')) return null;
 
   const langMap: Record<string, string> = {
     es: 'español',

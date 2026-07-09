@@ -1,8 +1,11 @@
 /// <reference path="../.astro/types.d.ts" />
 
 interface ImportMetaEnv {
-  readonly GEMINI_API_KEY: string;
-  readonly TMDB_API_KEY: string;
+  readonly SITE_URL?: string;
+  readonly GEMINI_API_KEY?: string;
+  readonly GROQ_API_KEY?: string;
+  readonly TMDB_API_KEY?: string;
+  readonly TMDB_ACCESS_TOKEN?: string;
 }
 
 interface ImportMeta {

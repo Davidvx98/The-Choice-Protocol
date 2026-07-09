@@ -91,7 +91,7 @@ import Result from '../components/Result.astro';
           <div class="flex items-center justify-between">
             <p class="text-gray-400 text-xs font-mono flex items-center gap-1.5">⚡ <span id="cfg-skip-title">Skip animations</span></p>
             <button id="settings-skip-toggle"
-              role="switch" aria-checked="false"
+              role="switch" aria-checked="false" aria-labelledby="cfg-skip-title"
               class="relative w-10 h-5 rounded-full transition-colors duration-300 flex-shrink-0 focus:outline-none"
               style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);">
               <span id="settings-skip-thumb"
@@ -104,7 +104,7 @@ import Result from '../components/Result.astro';
           <div id="skip-fx-row" class="flex items-center justify-between pl-3 border-l border-white/10" style="display:none;">
             <p class="text-gray-500 text-xs font-mono flex items-center gap-1.5">✨ <span id="cfg-skip-fx-label">Sin efectos visuales</span></p>
             <button id="settings-skipfx-toggle"
-              role="switch" aria-checked="false"
+              role="switch" aria-checked="false" aria-labelledby="cfg-skip-fx-label"
               class="relative w-8 h-4 rounded-full transition-colors duration-300 flex-shrink-0 focus:outline-none"
               style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);">
               <span id="settings-skipfx-thumb"

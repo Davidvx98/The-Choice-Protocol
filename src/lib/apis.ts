@@ -2,6 +2,8 @@
  * Clientes para APIs externas: Jikan (anime) y TMDB (películas)
  */
 
+import { getEnv } from './env';
+
 const JIKAN_BASE = 'https://api.jikan.moe/v4';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG = 'https://image.tmdb.org/t/p/w500';
@@ -68,7 +70,7 @@ export async function searchAnime(params: {
   }
   if (!res.ok) throw new Error(`Jikan API error: ${res.status}`);
   
-  const data = await res.json();
+  const data = await res.json() as any;
   
   const mapped: AnimeResult[] = (data.data || []).map((item: any) => ({
     title: item.title || item.title_english || 'Sin título',  // romaji first, English fallback
@@ -95,15 +97,29 @@ export interface MovieResult {
   genres: string[];
 }
 
+function getTmdbAuth(): { token: string; apiKey: string } {
+  return {
+    token: getEnv('TMDB_ACCESS_TOKEN'),
+    apiKey: getEnv('TMDB_API_KEY'),
+  };
+}
+
+function applyTmdbAuth(query: URLSearchParams): HeadersInit {
+  const { token, apiKey } = getTmdbAuth();
+  if (token) return { Authorization: `Bearer ${token}` };
+  if (apiKey) {
+    query.set('api_key', apiKey);
+    return {};
+  }
+  throw new Error('TMDB_ACCESS_TOKEN or TMDB_API_KEY not set');
+}
+
 export async function searchMovies(params: {
   genres?: number[];
   minScore?: number;
   yearRange?: [number, number];
   limit?: number;
 }): Promise<MovieResult[]> {
-  const TMDB_TOKEN = (process.env.TMDB_ACCESS_TOKEN || import.meta.env.TMDB_ACCESS_TOKEN || '').trim();
-  if (!TMDB_TOKEN) throw new Error('TMDB_ACCESS_TOKEN not set');
-
   const { genres = [], minScore = 6, yearRange, limit = 10 } = params;
 
   const query = new URLSearchParams({
@@ -122,6 +138,7 @@ export async function searchMovies(params: {
     query.set('primary_release_date.gte', `${yearRange[0]}-01-01`);
     query.set('primary_release_date.lte', `${yearRange[1]}-12-31`);
   }
+  const headers = applyTmdbAuth(query);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
@@ -129,14 +146,14 @@ export async function searchMovies(params: {
   try {
     res = await fetch(`${TMDB_BASE}/discover/movie?${query}`, {
       signal: controller.signal,
-      headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+      headers,
     });
   } finally {
     clearTimeout(timeout);
   }
   if (!res.ok) throw new Error(`TMDB API error: ${res.status}`);
 
-  const data = await res.json();
+  const data = await res.json() as any;
 
   const mapped: MovieResult[] = (data.results || []).map((item: any) => ({
     title: item.title || 'Sin título',
@@ -164,7 +181,7 @@ export async function fetchAnimeImage(title: string): Promise<string> {
       clearTimeout(timeout);
     }
     if (!res.ok) return '';
-    const data = await res.json();
+    const data = await res.json() as any;
     const item = data.data?.[0];
     return item?.images?.jpg?.large_image_url || item?.images?.jpg?.image_url || '';
   } catch {
@@ -173,23 +190,22 @@ export async function fetchAnimeImage(title: string): Promise<string> {
 }
 
 export async function fetchMovieImage(title: string): Promise<string> {
-  const TMDB_TOKEN = (process.env.TMDB_ACCESS_TOKEN || import.meta.env.TMDB_ACCESS_TOKEN || '').trim();
-  if (!TMDB_TOKEN) return '';
   try {
     const query = new URLSearchParams({ query: title, page: '1', include_adult: 'false', language: 'es-ES' });
+    const headers = applyTmdbAuth(query);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     let res: Response;
     try {
       res = await fetch(`${TMDB_BASE}/search/movie?${query}`, {
         signal: controller.signal,
-        headers: { Authorization: `Bearer ${TMDB_TOKEN}` },
+        headers,
       });
     } finally {
       clearTimeout(timeout);
     }
     if (!res.ok) return '';
-    const data = await res.json();
+    const data = await res.json() as any;
     const item = data.results?.[0];
     return item?.poster_path ? `${TMDB_IMG}${item.poster_path}` : '';
   } catch {

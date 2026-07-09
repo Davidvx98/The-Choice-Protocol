@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import node from '@astrojs/node';
+import cloudflare from '@astrojs/cloudflare';
 import sitemap from '@astrojs/sitemap';
 import compressor from 'astro-compressor';
 
@@ -23,7 +23,10 @@ export default defineConfig({
     compressor({ gzip: true, brotli: true }),
   ],
   output: 'server',
-  adapter: node({ mode: 'standalone' }),
+  adapter: cloudflare({
+    imageService: 'compile',
+    prerenderEnvironment: 'node',
+  }),
   devToolbar: { enabled: false },
   vite: {
     build: {

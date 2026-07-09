@@ -5,8 +5,8 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { askGroqSafe, isGroqAvailable } from './groq';
+import { getEnv } from './env';
 
-const API_KEY = (process.env.GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || '').trim();
 const MODELS   = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
 const TIMEOUT_MS = 5_000;  // 5s: si no responde, Groq toma el relevo inmediatamente
 const MAX_RETRIES = 1;     // Sin reintentos en el mismo modelo lento
@@ -14,9 +14,10 @@ const MAX_RETRIES = 1;     // Sin reintentos en el mismo modelo lento
 let genAI: GoogleGenerativeAI | null = null;
 
 function getClient(): GoogleGenerativeAI {
+  const apiKey = getEnv('GEMINI_API_KEY');
   if (!genAI) {
-    if (!API_KEY) throw new Error('GEMINI_API_KEY not set');
-    genAI = new GoogleGenerativeAI(API_KEY);
+    if (!apiKey) throw new Error('GEMINI_API_KEY not set');
+    genAI = new GoogleGenerativeAI(apiKey);
   }
   return genAI;
 }
@@ -39,7 +40,7 @@ function parseRetryDelay(errMessage: string): number {
  * Llama a Gemini con timeout, retry automático en 429, y fallback de modelo
  */
 export async function askGemini(prompt: string): Promise<string> {
-  if (!API_KEY) throw new Error('No API key configured');
+  if (!getEnv('GEMINI_API_KEY')) throw new Error('No API key configured');
 
   for (const modelName of MODELS) {
     const model = getClient().getGenerativeModel({ model: modelName });

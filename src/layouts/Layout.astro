@@ -37,15 +37,9 @@ const canonicalURL = new URL(canonicalPath, SITE_URL).href;
     <meta name="theme-color" content="#0a0a0f" />
     <meta name="generator" content={generator} />
     <meta name="rating" content="general" />
-    <meta name="revisit-after" content="3 days" />
 
     <!-- Canonical -->
     <link rel="canonical" href={canonicalURL} />
-
-    <!-- Hreflang: SEO internacional -->
-    <link rel="alternate" hreflang="es" href={`${SITE_URL}/`} />
-    <link rel="alternate" hreflang="en" href={`${SITE_URL}/`} />
-    <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/`} />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
