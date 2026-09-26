@@ -21,7 +21,7 @@ Descubre qué ver hoy a través de un viaje cinematográfico único
 
 ---
 
-🌐 **[Demo en vivo → the-choice-protocol.teampoza.dev]([https://the-choice-protocol.teampoza.dev](https://the-choice-protocol.srpouza.workers.dev/)**
+🌐 **[Demo en vivo → https://the-choice-protocol.srpouza.workers.dev]**
 
 ---
 
