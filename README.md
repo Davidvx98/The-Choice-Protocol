@@ -11,7 +11,7 @@ Descubre qué ver hoy a través de un viaje cinematográfico único
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![GSAP](https://img.shields.io/badge/GSAP-3.x-88CE02?style=flat-square&logo=greensock&logoColor=white)](https://gsap.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
-[![Deployed on CubePath](https://img.shields.io/badge/Deployed%20on-CubePath-6C47FF?style=flat-square)](https://the-choice-protocol.teampoza.dev)
+[![Deployed on CubePath](https://img.shields.io/badge/Deployed%20on-CubePath-6C47FF?style=flat-square)](https://the-choice-protocol.srpouza.workers.dev)
 [![Hackatón CubePath 2026](https://img.shields.io/badge/🏆_Hackatón-CubePath_2026-FFD700?style=flat-square)](https://midu.link/cubepath)
 
 ---
@@ -21,7 +21,7 @@ Descubre qué ver hoy a través de un viaje cinematográfico único
 
 ---
 
-🌐 **[Demo en vivo → https://the-choice-protocol.srpouza.workers.dev]**
+🌐 **[Demo en vivo → the-choice-protocol.srpouza.workers.dev](https://the-choice-protocol.srpouza.workers.dev)**
 
 ---
 
@@ -137,7 +137,7 @@ El Dockerfile está preparado para un build en dos etapas:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-🌐 **Pruébalo en: [the-choice-protocol.teampoza.dev](https://the-choice-protocol.teampoza.dev)**
+🌐 **Pruébalo en: [the-choice-protocol.srpouza.workers.dev](https://the-choice-protocol.srpouza.workers.dev)**
 
 ---
 
